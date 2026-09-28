@@ -1,0 +1,31 @@
+{
+  "device": "CPU",
+  "threads": 1,
+  "batch_size": 1,
+  "warmup": 50,
+  "measured_calls": 1000,
+  "scope": "Warm predictor call including normalization; excludes loading, HTTP and validation",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "models": {
+    "gru_0": {
+      "median_ms": 0.0675,
+      "p95_ms": 0.07980354999999999,
+      "parameters": 26369,
+      "artifact_bytes_three_seeds": 327216
+    },
+    "gru_mean_1": {
+      "median_ms": 0.060084,
+      "p95_ms": 0.0684622,
+      "parameters": 609,
+      "artifact_bytes_three_seeds": 18112
+    },
+    "rf_mean_4": {
+      "median_ms": 3.9359375,
+      "p95_ms": 4.32391665,
+      "parameters": null,
+      "artifact_bytes_three_seeds": 578970
+    }
+  },
+  "gru_parameter_reduction_percent": 97.690469869923,
+  "gru_median_latency_reduction_percent": 10.986666666666679
+}

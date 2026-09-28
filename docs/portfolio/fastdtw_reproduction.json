@@ -1,0 +1,26 @@
+{
+  "source": "local preconstruction minute-flow CSV; raw data excluded",
+  "stations": 6,
+  "station_minute_rows": 93,
+  "baseline_calls": 30,
+  "optimized_calls": 15,
+  "max_absolute_error": 1.0,
+  "baseline_seconds": [
+    0.023101083002984524,
+    0.023219958879053593,
+    0.026813041884452105,
+    0.022584457881748676,
+    0.023274834267795086
+  ],
+  "optimized_seconds": [
+    0.011525374837219715,
+    0.012032624799758196,
+    0.012029833626002073,
+    0.01139400014653802,
+    0.011697625275701284
+  ],
+  "median_speedup": 1.9850147642604778,
+  "backend": "fastdtw 0.3.4; default radius=1; scipy Euclidean local cost",
+  "equivalent": false,
+  "scope": "Diagnostic only: approximate FastDTW is asymmetric on this input; mirroring changes output and is NOT accepted as an equivalent optimization"
+}

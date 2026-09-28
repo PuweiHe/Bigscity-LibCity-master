@@ -1,0 +1,8 @@
+{
+  "observations": [
+    {"timestamp":"2024-05-29T10:00:00+08:00","speed":80,"flow":12,"speed_std":8,"high_code_share":0.4},
+    {"timestamp":"2024-05-29T10:01:00+08:00","speed":82,"flow":15,"speed_std":7,"high_code_share":0.3},
+    {"timestamp":"2024-05-29T10:02:00+08:00","speed":81,"flow":14,"speed_std":8,"high_code_share":0.4},
+    {"timestamp":"2024-05-29T10:03:00+08:00","speed":83,"flow":13,"speed_std":6,"high_code_share":0.3}
+  ]
+}

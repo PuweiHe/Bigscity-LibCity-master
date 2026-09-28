@@ -1,0 +1,55 @@
+{
+  "stations": 6,
+  "baseline_calls": 30,
+  "optimized_calls": 15,
+  "max_absolute_error": 0.0,
+  "repeats": 5,
+  "baseline_seconds": [
+    0.02666454203426838,
+    0.02551683411002159,
+    0.025248916819691658,
+    0.025182458106428385,
+    0.026420708745718002
+  ],
+  "optimized_seconds": [
+    0.012934708036482334,
+    0.01495887478813529,
+    0.012878875248134136,
+    0.012408291921019554,
+    0.01307441620156169
+  ],
+  "median_speedup": 1.9727414053762466,
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "pandas": "2.2.3",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "distance": "exact DTW, absolute scalar cost",
+  "scope": "Pair scheduling only; not a FastDTW comparison or forecasting accuracy result",
+  "source": "synthetic, seed=42; not internship data",
+  "coverage": [
+    {
+      "station": "station_0",
+      "samples": 60
+    },
+    {
+      "station": "station_1",
+      "samples": 60
+    },
+    {
+      "station": "station_2",
+      "samples": 60
+    },
+    {
+      "station": "station_3",
+      "samples": 60
+    },
+    {
+      "station": "station_4",
+      "samples": 60
+    },
+    {
+      "station": "station_5",
+      "samples": 60
+    }
+  ]
+}

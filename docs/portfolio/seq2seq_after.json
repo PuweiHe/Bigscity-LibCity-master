@@ -1,0 +1,14 @@
+{
+  "torch": "2.14.0",
+  "seed": 42,
+  "decoder_start": "last",
+  "output_shape": [
+    3,
+    2,
+    2,
+    1
+  ],
+  "repeat_max_abs_difference": 0.0,
+  "inference_without_y": true,
+  "scope": "Synthetic forward-pass reproduction, not training accuracy"
+}

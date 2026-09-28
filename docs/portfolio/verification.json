@@ -1,0 +1,15 @@
+{
+  "verification_date": "2026-09-28",
+  "command": "python -m unittest discover -s tests/portfolio -v",
+  "tests_run": 10,
+  "result": "passed",
+  "scope": "Local CPU regression suite; hosted CI and held-out forecasting evaluation not run",
+  "packages": {
+    "torch": "2.14.0",
+    "numpy": "2.3.5",
+    "pandas": "2.2.3",
+    "scipy": "1.18.1",
+    "fastdtw": "0.3.4",
+    "scikit-learn": "1.9.1"
+  }
+}

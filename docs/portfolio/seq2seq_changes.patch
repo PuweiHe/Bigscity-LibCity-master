@@ -1,0 +1,103 @@
+--- a/libcity/model/traffic_speed_prediction/Seq2Seq.py
++++ b/libcity/model/traffic_speed_prediction/Seq2Seq.py
+@@ -1,3 +1,4 @@
++# Modified September 2026: optional deterministic decoding and label-free inference.
+ import torch
+ import torch.nn as nn
+ import random
+@@ -11,7 +12,7 @@
+                  num_layers=1, dropout=0, bidirectional=False):
+         super().__init__()
+         self.device = device
+-        self.rnn_type = rnn_type
++        self.rnn_type = rnn_type.upper()
+         self.layers = num_layers
+         self.hidden_size = hidden_size
+         self.dropout = dropout
+@@ -34,15 +35,15 @@
+     def forward(self, x):
+         # x = [seq_len, batch_size, input_size]
+         # h_0 = [layers * num_directions, batch_size, hidden_size]
+-        h_0 = torch.zeros(self.layers * self.num_directions, x.shape[1], self.hidden_size).to(self.device)
++        h_0 = x.new_zeros(self.layers * self.num_directions, x.shape[1], self.hidden_size)
+         if self.rnn_type == 'LSTM':
+-            c_0 = torch.zeros(self.layers * self.num_directions, x.shape[1], self.hidden_size).to(self.device)
++            c_0 = x.new_zeros(self.layers * self.num_directions, x.shape[1], self.hidden_size)
+             out, (hn, cn) = self.rnn(x, (h_0, c_0))
+             # output = [seq_len, batch_size, hidden_size * num_directions]
+             # hn/cn = [layers * num_directions, batch_size, hidden_size]
+         else:
+             out, hn = self.rnn(x, h_0)
+-            cn = torch.zeros(hn.shape)
++            cn = torch.zeros_like(hn)
+             # output = [seq_len, batch_size, hidden_size * num_directions]
+             # hn = [layers * num_directions, batch_size, hidden_size]
+         return hn, cn
+@@ -53,7 +54,7 @@
+                  num_layers=1, dropout=0, bidirectional=False):
+         super().__init__()
+         self.device = device
+-        self.rnn_type = rnn_type
++        self.rnn_type = rnn_type.upper()
+         self.layers = num_layers
+         self.hidden_size = hidden_size
+         self.dropout = dropout
+@@ -83,7 +84,7 @@
+             out, (hn, cn) = self.rnn(x, (hn, cn))
+         else:
+             out, hn = self.rnn(x, hn)
+-            cn = torch.zeros(hn.shape)
++            cn = torch.zeros_like(hn)
+         # out = [seq_len = 1, batch_size, hidden_size * num_directions]
+         # hn = [layers * num_directions, batch_size, hidden_size]
+         out = self.fc(out.squeeze(0))
+@@ -105,7 +106,11 @@
+         self._logger = getLogger()
+         self._scaler = self.data_feature.get('scaler')
+ 
+-        self.rnn_type = config.get('rnn_type', 'GRU')
++        self.rnn_type = config.get('rnn_type', 'GRU').upper()
++        # Keep legacy behavior unless deterministic initialization is requested.
++        self.decoder_start = config.get('decoder_start', 'random')
++        if self.decoder_start not in {'random', 'last', 'zero'}:
++            raise ValueError('decoder_start must be random, last or zero')
+         self.hidden_size = config.get('hidden_size', 64)
+         self.num_layers = config.get('num_layers', 1)
+         self.dropout = config.get('dropout', 0)
+@@ -119,14 +124,18 @@
+ 
+     def forward(self, batch):
+         src = batch['X']  # [batch_size, input_window, num_nodes, feature_dim]
+-        target = batch['y']  # [batch_size, output_window, num_nodes, feature_dim]
++        target = None
++        if self.training and self.teacher_forcing_ratio > 0:
++            target = batch['y']  # Required only for teacher forcing.
+         src = src.permute(1, 0, 2, 3)  # [input_window, batch_size, num_nodes, feature_dim]
+-        target = target.permute(1, 0, 2, 3)  # [output_window, batch_size, num_nodes, feature_dim]
++        if target is not None:
++            target = target.permute(1, 0, 2, 3)
+ 
+         batch_size = src.shape[1]
+         src = src.reshape(self.input_window, batch_size, self.num_nodes * self.feature_dim)
+-        target = target[..., :self.output_dim].contiguous().reshape(
+-            self.output_window, batch_size, self.num_nodes * self.output_dim)
++        if target is not None:
++            target = target[..., :self.output_dim].contiguous().reshape(
++                self.output_window, batch_size, self.num_nodes * self.output_dim)
+         # src = [self.input_window, batch_size, self.num_nodes * self.feature_dim]
+         # target = [self.output_window, batch_size, self.num_nodes * self.output_dim]
+ 
+@@ -134,7 +143,12 @@
+         decoder_hn = encoder_hn
+         decoder_cn = encoder_cn
+         # encoder_hidden_state = [layers * num_directions, batch_size, hidden_size]
+-        decoder_input = torch.randn(batch_size, self.num_nodes * self.output_dim).to(self.device)
++        if self.decoder_start == 'last':
++            decoder_input = batch['X'][:, -1, :, :self.output_dim].reshape(batch_size, -1)
++        elif self.decoder_start == 'zero':
++            decoder_input = src.new_zeros(batch_size, self.num_nodes * self.output_dim)
++        else:
++            decoder_input = src.new_empty(batch_size, self.num_nodes * self.output_dim).normal_()
+         # decoder_input = [batch_size, self.num_nodes * self.output_dim]
+ 
+         outputs = []

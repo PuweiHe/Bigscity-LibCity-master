@@ -1,0 +1,22 @@
+/.vscode
+/raw_data/*
+/visualized_data/*
+/libcity/tmp/*
+/libcity/cache/*
+/libcity/__pycache__
+/libcity/*/__pycache__
+/libcity/data/dataset/__pycache__
+/.idea
+/libcity/log/*
+/libcity/model/*/__pycache__
+/libcity/data/dataset/*/__pycache__
+
+# Portfolio outputs and local environment
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+outputs/
+.env
+.env.*
+.ipynb_checkpoints/

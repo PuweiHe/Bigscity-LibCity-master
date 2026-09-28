@@ -1,0 +1,8 @@
+{
+  "decoder_start": "last",
+  "rnn_type": "GRU",
+  "input_window": 4,
+  "output_window": 2,
+  "hidden_size": 8,
+  "teacher_forcing_ratio": 0
+}
