@@ -20,3 +20,5 @@ outputs/
 .env
 .env.*
 .ipynb_checkpoints/
+
+.ruff_cache/
