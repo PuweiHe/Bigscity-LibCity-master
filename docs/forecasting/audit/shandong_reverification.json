@@ -1,0 +1,12 @@
+{
+  "source_file_hashes_match": true,
+  "audit_matches_published": true,
+  "raw_rows": 6418,
+  "split_counts": {
+    "train": 132,
+    "validation": 82,
+    "test": 112
+  },
+  "test_recordings": 2,
+  "warning": "Small retrospective holdout; means across seeds are not independent road-level evidence."
+}

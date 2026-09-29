@@ -4,6 +4,10 @@
 
 An internship-derived traffic analytics project with reproducible Random Forest, LibCity SVR/FNN/GRU comparisons, a validated FastAPI inference service, and a public **METR-LA graph and Transformer forecasting** study. The internship-recording task predicts next-minute mean vehicle speed; the public Los Angeles task predicts 5-minute-ahead speed at 207 road sensors. [Model selection](docs/forecasting/MODEL_SELECTION.md) · [METR-LA protocol and model results](docs/forecasting/METR_LA_STUDY.md).
 
+## Multi-horizon extension — training in progress
+
+A [bottom-up audit](docs/forecasting/DEEP_AUDIT.md) reverified the published checkpoints and identified attribution, masking, and multi-step interface limitations. A [frozen multi-horizon study](docs/forecasting/MULTIHORIZON_STUDY.md) now compares a factorial STGCN ablation, recursive/direct prediction, DCRNN and STTN across three seeds on METR-LA and independently trained PEMS-BAY models. Final results are pending; no new accuracy gain is claimed.
+
 ## Public Los Angeles traffic forecasting: STGCN, DCRNN, and STTN
 
 Using the public 34,272-timestamp METR-LA speed series and road graph, I reproduced LibCity's Chebyshev **STGCN**, diffusion-convolutional **DCRNN**, and spatial-temporal Transformer **STTN** for 207-sensor 5-minute speed prediction. A chronological 70/10/20 split, train-only scaling, 30-epoch validation tuning, and a missing-aware last-available-speed baseline make the evaluation inspectable. On **6,843 later test windows** covering 1,244,780 valid sensor targets, STGCN achieved **2.247 mph MAE**, DCRNN **2.263 mph**, and validation-selected STTN **2.430 mph**, versus **2.815 mph** for the baseline. STGCN had the lowest validation and test MAE of these three families; its test MAE was **20.18%** below persistence. Earlier test scores from the same period had already been inspected, so these are exploratory offline results, not a prospective blind test, original-paper scores, or live congestion improvements.

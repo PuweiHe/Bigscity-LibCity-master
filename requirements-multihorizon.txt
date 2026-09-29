@@ -1,0 +1,4 @@
+-r requirements-metr-la.txt
+# Conversion only; training consumes NumPy arrays.
+h5py==3.14.0
+pandas==2.2.0

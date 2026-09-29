@@ -6,6 +6,7 @@ import torch.nn as nn
 from logging import getLogger
 from libcity.model.abstract_traffic_state_model import AbstractTrafficStateModel
 from libcity.model import loss
+from libcity.model.forecasting_utils import last_observed_value
 
 
 def calculate_normalized_laplacian(adj):
@@ -349,6 +350,7 @@ class DCRNN(AbstractTrafficStateModel, Seq2SeqAttrs):
 
         self.use_curriculum_learning = config.get('use_curriculum_learning', False)
         self.residual_last_speed = config.get('residual_last_speed', False)
+        self.missing_aware_residual = config.get('missing_aware_residual', False)
         self.input_window = config.get('input_window', 1)
         self.output_window = config.get('output_window', 1)
         self.device = config.get('device', torch.device('cpu'))
@@ -420,7 +422,7 @@ class DCRNN(AbstractTrafficStateModel, Seq2SeqAttrs):
             torch.tensor: (batch_size, self.output_window, self.num_nodes, self.output_dim)
         """
         inputs = batch['X']
-        labels = batch['y']
+        labels = batch.get('y')
         batch_size, _, num_nodes, input_dim = inputs.shape
         inputs = inputs.permute(1, 0, 2, 3)  # (input_window, batch_size, num_nodes, input_dim)
         inputs = inputs.view(self.input_window, batch_size, num_nodes * input_dim).to(self.device)
@@ -443,7 +445,9 @@ class DCRNN(AbstractTrafficStateModel, Seq2SeqAttrs):
             self._logger.info("Total trainable parameters {}".format(count_parameters(self)))
         outputs = outputs.view(self.output_window, batch_size, self.num_nodes, self.output_dim).permute(1, 0, 2, 3)
         if self.residual_last_speed:
-            outputs = outputs + batch['X'][:, -1:, :, :self.output_dim]
+            anchor = (last_observed_value(batch['X'], batch.get('X_mask'))
+                      if self.missing_aware_residual else batch['X'][:, -1:])
+            outputs = outputs + anchor[..., :self.output_dim]
         return outputs
 
     def calculate_loss(self, batch, batches_seen=None):

@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
 from libcity.model import loss
+from libcity.model.forecasting_utils import last_observed_value
 from libcity.model.abstract_traffic_state_model import AbstractTrafficStateModel
 
 
@@ -124,7 +125,7 @@ class TemporalConvLayer(nn.Module):
 class SpatioConvLayer(nn.Module):
     def __init__(self, ks, c_in, c_out, lk, device):
         super(SpatioConvLayer, self).__init__()
-        self.Lk = lk
+        self.register_buffer("Lk", lk, persistent=False)
         self.theta = nn.Parameter(torch.FloatTensor(c_in, c_out, ks).to(device))  # kernel: C_in*C_out*ks
         self.b = nn.Parameter(torch.FloatTensor(1, c_out, 1, 1).to(device))
         self.align = Align(c_in, c_out)
@@ -205,11 +206,13 @@ class STGCN(AbstractTrafficStateModel):
 
         self.Ks = config.get('Ks', 3)
         self.Kt = config.get('Kt', 3)
-        self.blocks = config.get('blocks', [[1, 32, 64], [64, 32, 128]])
+        self.blocks = [list(block) for block in config.get('blocks', [[1, 32, 64], [64, 32, 128]])]
         self.input_window = config.get('input_window', 1)
         self.output_window = config.get('output_window', 1)
         self.drop_prob = config.get('dropout', 0)
         self.residual_last_speed = config.get('residual_last_speed', False)
+        self.missing_aware_residual = config.get('missing_aware_residual', False)
+        self.direct_multi_step = config.get('direct_multi_step', False)
 
         self.train_mode = config.get('stgcn_train_mode', 'quick')  # or full
         if self.train_mode.lower() not in ['quick', 'full']:
@@ -243,7 +246,8 @@ class STGCN(AbstractTrafficStateModel):
         self.st_conv2 = STConvBlock(self.Ks, self.Kt, self.num_nodes,
                                     self.blocks[1], self.drop_prob, self.Lk, self.device)
         self.output = OutputLayer(self.blocks[1][2], self.input_window - len(self.blocks) * 2
-                                  * (self.Kt - 1), self.num_nodes, self.output_dim)
+                                  * (self.Kt - 1), self.num_nodes,
+                                  self.output_dim * (self.output_window if self.direct_multi_step else 1))
 
     def forward(self, batch):
         x = batch['X']  # (batch_size, input_length, num_nodes, feature_dim)
@@ -252,12 +256,19 @@ class STGCN(AbstractTrafficStateModel):
         x_st2 = self.st_conv2(x_st1)  # (batch_size, c[2](128), input_length-kt+1-kt+1-kt+1-kt+1, num_nodes)
         outputs = self.output(x_st2)  # (batch_size, output_dim(1), output_length(1), num_nodes)
         outputs = outputs.permute(0, 2, 3, 1)  # (batch_size, output_length(1), num_nodes, output_dim)
+        if self.direct_multi_step:
+            outputs = outputs[:, 0].reshape(outputs.shape[0], self.num_nodes,
+                                             self.output_window, self.output_dim).permute(0, 2, 1, 3)
         if self.residual_last_speed:
-            outputs = outputs + batch['X'][:, -1:, :, :self.output_dim]
+            anchor = (last_observed_value(batch['X'], batch.get('X_mask'))
+                      if self.missing_aware_residual else batch['X'][:, -1:])
+            outputs = outputs + anchor[..., :self.output_dim]
         return outputs
 
     def calculate_loss(self, batch):
-        if self.train_mode.lower() == 'quick':
+        if self.direct_multi_step:
+            y_true, y_predicted = batch['y'], self.forward(batch)
+        elif self.train_mode.lower() == 'quick':
             if self.training:  # 训练使用t+1时间步的loss
                 y_true = batch['y'][:, 0:1, :, :]  # (batch_size, 1, num_nodes, feature_dim)
                 y_predicted = self.forward(batch)  # (batch_size, 1, num_nodes, output_dim)
@@ -272,17 +283,28 @@ class STGCN(AbstractTrafficStateModel):
         return loss.masked_mse_torch(y_predicted, y_true)
 
     def predict(self, batch):
+        if self.direct_multi_step:
+            return self.forward(batch)
         # 多步预测
         x = batch['X']  # (batch_size, input_length, num_nodes, feature_dim)
-        y = batch['y']  # (batch_size, output_length, num_nodes, feature_dim)
+        y = batch.get('y')  # Future exogenous features are only needed when present.
         y_preds = []
         x_ = x.clone()
+        observed = batch.get('X_mask')
         for i in range(self.output_window):
             batch_tmp = {'X': x_}
+            if observed is not None:
+                batch_tmp['X_mask'] = observed
             y_ = self.forward(batch_tmp)  # (batch_size, 1, num_nodes, output_dim)
             y_preds.append(y_.clone())
             if y_.shape[-1] < x_.shape[-1]:  # output_dim < feature_dim
                 y_ = torch.cat([y_, y[:, i:i+1, :, self.output_dim:]], dim=3)
             x_ = torch.cat([x_[:, 1:, :, :], y_], dim=1)
+            if observed is not None:
+                # Model outputs are available values for the next rollout step.
+                next_mask = torch.ones_like(y_, dtype=torch.bool)
+                if self.output_dim < y_.shape[-1] and batch.get('y_mask') is not None:
+                    next_mask[..., self.output_dim:] = batch['y_mask'][:, i:i+1, :, self.output_dim:]
+                observed = torch.cat([observed[:, 1:], next_mask], dim=1)
         y_preds = torch.cat(y_preds, dim=1)  # (batch_size, output_length, num_nodes, output_dim)
         return y_preds

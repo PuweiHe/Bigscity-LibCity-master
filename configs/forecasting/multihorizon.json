@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "purpose": "12-step speed forecasting; factorial STGCN ablation and independent PEMS-BAY confirmation",
+  "datasets": [
+    "METR_LA",
+    "PEMS_BAY"
+  ],
+  "seeds": [
+    17,
+    42,
+    73
+  ],
+  "epochs": 60,
+  "min_epochs": 20,
+  "patience": 10,
+  "batch_size": 16,
+  "threads": 4,
+  "train_stride": 1,
+  "eval_stride": 1,
+  "trials": [
+    {
+      "id": "stgcn_reference",
+      "model": "STGCN",
+      "config": {
+        "Ks": 3,
+        "Kt": 3,
+        "blocks": [
+          [
+            1,
+            8,
+            16
+          ],
+          [
+            16,
+            8,
+            16
+          ]
+        ],
+        "dropout": 0.0,
+        "graph_conv_type": "chebconv",
+        "direct_multi_step": true
+      },
+      "learning_rate": 0.003
+    },
+    {
+      "id": "stgcn_reference_residual",
+      "model": "STGCN",
+      "config": {
+        "Ks": 3,
+        "Kt": 3,
+        "blocks": [
+          [
+            1,
+            8,
+            16
+          ],
+          [
+            16,
+            8,
+            16
+          ]
+        ],
+        "dropout": 0.0,
+        "graph_conv_type": "chebconv",
+        "direct_multi_step": true,
+        "residual_last_speed": true,
+        "missing_aware_residual": true
+      },
+      "learning_rate": 0.003
+    },
+    {
+      "id": "stgcn_hyperparameters",
+      "model": "STGCN",
+      "config": {
+        "Ks": 3,
+        "Kt": 3,
+        "blocks": [
+          [
+            1,
+            16,
+            32
+          ],
+          [
+            32,
+            16,
+            32
+          ]
+        ],
+        "dropout": 0.1,
+        "graph_conv_type": "chebconv",
+        "direct_multi_step": true
+      },
+      "learning_rate": 0.001
+    },
+    {
+      "id": "stgcn_hyperparameters_residual",
+      "model": "STGCN",
+      "config": {
+        "Ks": 3,
+        "Kt": 3,
+        "blocks": [
+          [
+            1,
+            16,
+            32
+          ],
+          [
+            32,
+            16,
+            32
+          ]
+        ],
+        "dropout": 0.1,
+        "graph_conv_type": "chebconv",
+        "direct_multi_step": true,
+        "residual_last_speed": true,
+        "missing_aware_residual": true
+      },
+      "learning_rate": 0.001
+    },
+    {
+      "id": "dcrnn_reference",
+      "model": "DCRNN",
+      "config": {
+        "max_diffusion_step": 2,
+        "num_rnn_layers": 1,
+        "rnn_units": 32,
+        "filter_type": "dual_random_walk",
+        "use_curriculum_learning": false,
+        "residual_last_speed": true,
+        "missing_aware_residual": true
+      },
+      "learning_rate": 0.001
+    },
+    {
+      "id": "sttn_reference",
+      "model": "STTN",
+      "config": {
+        "embed_dim": 32,
+        "num_layers": 2,
+        "num_heads": 4,
+        "forward_expansion": 2,
+        "dropout_rate": 0.1,
+        "residual_last_speed": true,
+        "residual_scale": 0.5
+      },
+      "learning_rate": 0.0005
+    },
+    {
+      "id": "stgcn_recursive_reference",
+      "model": "STGCN",
+      "config": {
+        "Ks": 3,
+        "Kt": 3,
+        "blocks": [
+          [
+            1,
+            8,
+            16
+          ],
+          [
+            16,
+            8,
+            16
+          ]
+        ],
+        "dropout": 0.0,
+        "graph_conv_type": "chebconv",
+        "direct_multi_step": false
+      },
+      "learning_rate": 0.003
+    }
+  ],
+  "selection": "mean validation MAE across all 12 horizons and three seeds; no test-driven changes",
+  "missing_policy": "raw nonpositive or nonfinite is missing; observed normalized zero remains valid",
+  "historical_comparability": "old 5-minute single-step results cannot be numerically compared as same task",
+  "notes": [
+    "STGCN reference uses the inherited compact 8/16-channel architecture, not original-paper default width.",
+    "All STGCN factorial cells share a direct 12-output head; the recursive reference isolates that task adaptation.",
+    "PEMS-BAY models are independently trained on Bay train data; this is cross-dataset replication, not zero-shot transfer."
+  ]
+}

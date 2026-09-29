@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from libcity.model import loss
+from libcity.model.forecasting_utils import last_observed_value
 from libcity.model.abstract_traffic_state_model import AbstractTrafficStateModel
 
 
@@ -210,7 +211,7 @@ class TTransformer(nn.Module):
     def forward(self, value, key, query):
         batch_size, num_nodes, input_windows, embed_dim = query.shape
 
-        D_T = self.temporal_embedding(torch.arange(0, input_windows).to(self.device))
+        D_T = self.temporal_embedding(torch.arange(0, input_windows, device=query.device))
         D_T = D_T.expand(batch_size, num_nodes, input_windows, embed_dim)
 
         query = query + D_T
@@ -332,11 +333,7 @@ class STTN(AbstractTrafficStateModel):
         out = self.conv3(out)
         out = out.permute(0, 3, 2, 1)
         if self.residual_last_speed:
-            observed = history.ne(0)
-            reverse_index = observed.flip(1).int().argmax(dim=1, keepdim=True)
-            index = history.shape[1] - 1 - reverse_index
-            anchor = torch.gather(history, 1, index)
-            anchor = torch.where(observed.any(dim=1, keepdim=True), anchor, 0)
+            anchor = last_observed_value(history, batch.get('X_mask'))
             out = anchor[:, :, :, :self.output_dim] + self.residual_scale * out
         return out
 

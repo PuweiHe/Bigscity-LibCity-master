@@ -1,0 +1,10 @@
+{
+  "forecasting_unittest_count": 35,
+  "portfolio_unittest_count": 10,
+  "status": "passed",
+  "logs": [
+    "logs/multihorizon_tests.log",
+    "logs/portfolio_audit_tests.log"
+  ],
+  "runtime": "Python 3.10.19 / torch 2.10.0; local runtime overlay for API and HDF5 dependencies"
+}

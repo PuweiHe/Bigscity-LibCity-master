@@ -1,0 +1,53 @@
+{
+  "normalized_zero_observed_collisions": 0,
+  "models": {
+    "STGCN": {
+      "checkpoint_sha256": "4567382f984e3d57cafc9b97f9df843de028b96b4e9c7af28b1645eaba1f7a9f",
+      "actual": {
+        "mae_mph": 2.246914107061087,
+        "rmse_mph": 3.9027636229690383,
+        "persistence_mae_mph": 2.815136347080722,
+        "observations": 1244780
+      },
+      "published": {
+        "mae_mph": 2.24691410456041,
+        "rmse_mph": 3.9027636119381692,
+        "persistence_mae_mph": 2.8151363453645706,
+        "observations": 1244780
+      },
+      "mae_absolute_difference": 2.500676998806739e-09
+    },
+    "DCRNN": {
+      "checkpoint_sha256": "27c1bfd1cde52504b5fa3dc52a1199c375ebc650602b3a7cfd0b74c3116ed1ab",
+      "actual": {
+        "mae_mph": 2.2630795938212978,
+        "rmse_mph": 3.9148807573431843,
+        "persistence_mae_mph": 2.815136347080722,
+        "observations": 1244780
+      },
+      "published": {
+        "mae_mph": 2.2630796033827107,
+        "rmse_mph": 3.9148807593721933,
+        "persistence_mae_mph": 2.8151363453645706,
+        "observations": 1244780
+      },
+      "mae_absolute_difference": 9.56141299468527e-09
+    },
+    "STTN": {
+      "checkpoint_sha256": "346be5bb4d5be785b5282974cea7f23cd9182ad752703afa1da082ff32e1f67d",
+      "actual": {
+        "mae_mph": 2.4300647547125545,
+        "rmse_mph": 4.283098004300751,
+        "persistence_mae_mph": 2.815136347080722,
+        "observations": 1244780
+      },
+      "published": {
+        "mae_mph": 2.4300647547125545,
+        "rmse_mph": 4.283098004300751,
+        "persistence_mae_mph": 2.815136347080722,
+        "observations": 1244780
+      },
+      "mae_absolute_difference": 0.0
+    }
+  }
+}
