@@ -1,8 +1,8 @@
 from logging import getLogger
-import math
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
 from libcity.model import loss
 from libcity.model.abstract_traffic_state_model import AbstractTrafficStateModel
 
@@ -27,17 +27,33 @@ class FNN(AbstractTrafficStateModel):
 
         self.fc1 = nn.Linear(self.input_window * self.feature_dim, self.hidden_size)
         self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(self.hidden_size, self.output_window * self.output_dim)
+        self.hidden_size_2 = config.get('hidden_size_2')
+        self.fc2 = nn.Linear(self.hidden_size, self.hidden_size_2 or
+                             self.output_window * self.output_dim)
+        self.fc3 = (nn.Linear(self.hidden_size_2, self.output_window * self.output_dim)
+                    if self.hidden_size_2 else None)
+        self.residual_anchor = config.get('residual_anchor')
+        self.residual_scale = config.get('residual_scale', 1.0)
+        if self.residual_anchor not in (None, 'mean', 'last'):
+            raise ValueError('residual_anchor must be mean, last or None')
 
     def forward(self, batch):
-        inputs = batch['X']
+        observations = batch['X']
+        inputs = observations
         batch_size = inputs.shape[0]
         inputs = inputs.permute(0, 2, 1, 3)
         inputs = inputs.reshape(batch_size, self.num_nodes, -1)
         outputs = self.fc1(inputs)
         outputs = self.relu(outputs)
         outputs = self.fc2(outputs)
+        if self.fc3 is not None:
+            outputs = self.fc3(self.relu(outputs))
         outputs = outputs.reshape(batch_size, self.num_nodes, self.output_window, self.output_dim)
+        if self.residual_anchor is not None:
+            history = observations[..., :self.output_dim]
+            anchor = (history.mean(dim=1) if self.residual_anchor == 'mean'
+                      else history[:, -1])
+            outputs = anchor.unsqueeze(2) + self.residual_scale * outputs
         return outputs.permute(0, 2, 1, 3)
 
     def calculate_loss(self, batch):

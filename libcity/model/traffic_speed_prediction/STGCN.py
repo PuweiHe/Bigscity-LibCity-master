@@ -209,6 +209,7 @@ class STGCN(AbstractTrafficStateModel):
         self.input_window = config.get('input_window', 1)
         self.output_window = config.get('output_window', 1)
         self.drop_prob = config.get('dropout', 0)
+        self.residual_last_speed = config.get('residual_last_speed', False)
 
         self.train_mode = config.get('stgcn_train_mode', 'quick')  # or full
         if self.train_mode.lower() not in ['quick', 'full']:
@@ -251,6 +252,8 @@ class STGCN(AbstractTrafficStateModel):
         x_st2 = self.st_conv2(x_st1)  # (batch_size, c[2](128), input_length-kt+1-kt+1-kt+1-kt+1, num_nodes)
         outputs = self.output(x_st2)  # (batch_size, output_dim(1), output_length(1), num_nodes)
         outputs = outputs.permute(0, 2, 3, 1)  # (batch_size, output_length(1), num_nodes, output_dim)
+        if self.residual_last_speed:
+            outputs = outputs + batch['X'][:, -1:, :, :self.output_dim]
         return outputs
 
     def calculate_loss(self, batch):

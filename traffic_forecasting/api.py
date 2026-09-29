@@ -47,7 +47,7 @@ def create_app(artifact=None, family=None):
         del app.state.predictor
 
     app = FastAPI(
-        title="One-minute traffic speed forecast", version="1.0", lifespan=lifespan
+        title="One-minute traffic speed forecast", version="1.1", lifespan=lifespan
     )
 
     @app.get("/health")

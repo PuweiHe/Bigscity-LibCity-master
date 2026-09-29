@@ -1,0 +1,413 @@
+{
+  "scope": "Retrospective LibCity model-list extension; original holdout already opened",
+  "task": "Predict next-minute mean speed from four prior complete minutes",
+  "data_digest": "7ea5e475b7b1863cdac2e955e36241bb2b7e32131a4f9c4a8434b126cf4f04d9",
+  "train_windows": 132,
+  "validation_windows": 82,
+  "seeds": [
+    17,
+    42,
+    73
+  ],
+  "candidates": [
+    {
+      "id": "svr_0",
+      "family": "svr",
+      "config": {
+        "kernel": "rbf",
+        "C": 1.0,
+        "epsilon": 0.1,
+        "baseline": true
+      },
+      "validation": {
+        "mae": 6.902337445984544,
+        "rmse": 8.309968660758136
+      }
+    },
+    {
+      "id": "svr_1",
+      "family": "svr",
+      "config": {
+        "kernel": "linear",
+        "C": 0.1,
+        "epsilon": 1.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 6.245801369604867,
+        "rmse": 7.371782626612566
+      }
+    },
+    {
+      "id": "svr_2",
+      "family": "svr",
+      "config": {
+        "kernel": "linear",
+        "C": 0.1,
+        "epsilon": 3.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 6.3815417550691125,
+        "rmse": 7.613956413585843
+      }
+    },
+    {
+      "id": "svr_3",
+      "family": "svr",
+      "config": {
+        "kernel": "linear",
+        "C": 1.0,
+        "epsilon": 1.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 6.141012527705708,
+        "rmse": 7.30381834753884
+      }
+    },
+    {
+      "id": "svr_4",
+      "family": "svr",
+      "config": {
+        "kernel": "linear",
+        "C": 1.0,
+        "epsilon": 3.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 5.95966522124632,
+        "rmse": 7.102854301097149
+      }
+    },
+    {
+      "id": "svr_5",
+      "family": "svr",
+      "config": {
+        "kernel": "linear",
+        "C": 10.0,
+        "epsilon": 1.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 6.128538285369077,
+        "rmse": 7.353649929065983
+      }
+    },
+    {
+      "id": "svr_6",
+      "family": "svr",
+      "config": {
+        "kernel": "linear",
+        "C": 10.0,
+        "epsilon": 3.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 5.854428996932858,
+        "rmse": 6.967155948709282
+      }
+    },
+    {
+      "id": "svr_7",
+      "family": "svr",
+      "config": {
+        "kernel": "linear",
+        "C": 100.0,
+        "epsilon": 1.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 6.117380467527328,
+        "rmse": 7.315291541214735
+      }
+    },
+    {
+      "id": "svr_8",
+      "family": "svr",
+      "config": {
+        "kernel": "linear",
+        "C": 100.0,
+        "epsilon": 3.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 5.830635194219123,
+        "rmse": 6.891216807015431
+      }
+    },
+    {
+      "id": "svr_9",
+      "family": "svr",
+      "config": {
+        "kernel": "rbf",
+        "C": 0.1,
+        "epsilon": 3.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 7.617922307790148,
+        "rmse": 9.178358469400415
+      }
+    },
+    {
+      "id": "svr_10",
+      "family": "svr",
+      "config": {
+        "kernel": "rbf",
+        "C": 1.0,
+        "epsilon": 3.0,
+        "baseline": false
+      },
+      "validation": {
+        "mae": 7.05464552254001,
+        "rmse": 8.475241686987003
+      }
+    },
+    {
+      "id": "fnn_0",
+      "family": "fnn",
+      "config": {
+        "hidden_size": 128,
+        "loss": "mse",
+        "weight_decay": 0.0,
+        "baseline": true
+      },
+      "parameters": 2305,
+      "validation": {
+        "mae": 6.861246585845947
+      },
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.718098163604736,
+          "best_epoch": 5
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.739973068237305,
+          "best_epoch": 3
+        },
+        {
+          "seed": 73,
+          "validation_mae": 7.125668525695801,
+          "best_epoch": 2
+        }
+      ]
+    },
+    {
+      "id": "fnn_1",
+      "family": "fnn",
+      "config": {
+        "hidden_size": 8,
+        "hidden_size_2": 8,
+        "residual_anchor": "mean",
+        "residual_scale": 0.1,
+        "loss": "huber",
+        "weight_decay": 0.01,
+        "baseline": false
+      },
+      "parameters": 217,
+      "validation": {
+        "mae": 6.181062698364258
+      },
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.1396965980529785,
+          "best_epoch": 1
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.179360866546631,
+          "best_epoch": 1
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.224130630493164,
+          "best_epoch": 75
+        }
+      ]
+    },
+    {
+      "id": "fnn_2",
+      "family": "fnn",
+      "config": {
+        "hidden_size": 8,
+        "hidden_size_2": 8,
+        "residual_anchor": "mean",
+        "residual_scale": 0.25,
+        "loss": "huber",
+        "weight_decay": 0.01,
+        "baseline": false
+      },
+      "parameters": 217,
+      "validation": {
+        "mae": 6.138742287953694
+      },
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.085204124450684,
+          "best_epoch": 1
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.157918930053711,
+          "best_epoch": 2
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.1731038093566895,
+          "best_epoch": 17
+        }
+      ]
+    },
+    {
+      "id": "fnn_3",
+      "family": "fnn",
+      "config": {
+        "hidden_size": 16,
+        "hidden_size_2": 8,
+        "residual_anchor": "mean",
+        "residual_scale": 0.1,
+        "loss": "huber",
+        "weight_decay": 0.01,
+        "baseline": false
+      },
+      "parameters": 417,
+      "validation": {
+        "mae": 6.192402680714925
+      },
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.190308570861816,
+          "best_epoch": 1
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.2194695472717285,
+          "best_epoch": 26
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.1674299240112305,
+          "best_epoch": 6
+        }
+      ]
+    },
+    {
+      "id": "fnn_4",
+      "family": "fnn",
+      "config": {
+        "hidden_size": 16,
+        "hidden_size_2": 8,
+        "residual_anchor": "mean",
+        "residual_scale": 0.25,
+        "loss": "huber",
+        "weight_decay": 0.01,
+        "baseline": false
+      },
+      "parameters": 417,
+      "validation": {
+        "mae": 6.127190272013347
+      },
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.111523151397705,
+          "best_epoch": 23
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.225152015686035,
+          "best_epoch": 34
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.044895648956299,
+          "best_epoch": 39
+        }
+      ]
+    },
+    {
+      "id": "fnn_5",
+      "family": "fnn",
+      "config": {
+        "hidden_size": 32,
+        "hidden_size_2": 8,
+        "residual_anchor": "mean",
+        "residual_scale": 0.1,
+        "loss": "huber",
+        "weight_decay": 0.01,
+        "baseline": false
+      },
+      "parameters": 817,
+      "validation": {
+        "mae": 6.188458760579427
+      },
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.185333251953125,
+          "best_epoch": 1
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.165022850036621,
+          "best_epoch": 1
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.215020179748535,
+          "best_epoch": 1
+        }
+      ]
+    },
+    {
+      "id": "fnn_6",
+      "family": "fnn",
+      "config": {
+        "hidden_size": 32,
+        "hidden_size_2": 8,
+        "residual_anchor": "mean",
+        "residual_scale": 0.25,
+        "loss": "huber",
+        "weight_decay": 0.01,
+        "baseline": false
+      },
+      "parameters": 817,
+      "validation": {
+        "mae": 6.118067582448323
+      },
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.080367565155029,
+          "best_epoch": 21
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.1253533363342285,
+          "best_epoch": 1
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.148481845855713,
+          "best_epoch": 14
+        }
+      ]
+    }
+  ],
+  "selected": {
+    "svr": "svr_8",
+    "fnn": "fnn_6"
+  },
+  "checkpoints": {
+    "svr_0": "32ef2fb0b57f676af16b98b64e09440b55a054571ce4cbe173e8b586f081b8b6",
+    "fnn_0": "985c8acd6b54a4c0af0d89b5cb0297c72575c1b64b8214c0cd9e375946a02fe3",
+    "svr_8": "dd283c87923915ac58e2625f4ec21bfcb1ad53a760dace68a886ec1299166d67",
+    "fnn_6": "89c9316cc85a21c6a5a94ef00e444433a1eefc1da333eaac830b62b0be464d3f"
+  }
+}

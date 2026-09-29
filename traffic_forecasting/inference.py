@@ -10,7 +10,7 @@ import pandas as pd
 import torch
 
 from .data import FEATURES, WINDOW, feature_matrix
-from .models import ForecastGRU, predict_rf
+from .models import ForecastFNN, ForecastGRU, predict_rf
 
 
 def validate_request(payload):
@@ -55,18 +55,19 @@ class Predictor:
     """Load one trusted local checkpoint once; reuse for multiple requests."""
 
     def __init__(self, artifact, family, seed=42):
-        if family not in {"rf", "gru"}:
-            raise ValueError("family must be rf or gru")
+        if family not in {"rf", "gru", "fnn"}:
+            raise ValueError("family must be rf, gru or fnn")
         bundles = joblib.load(artifact)  # Never load untrusted uploaded pickle files.
         matches = [b for b in bundles if b["seed"] == seed]
         if len(matches) != 1:
             raise ValueError("Requested seed is absent or ambiguous")
         self.bundle, self.family = matches[0], family
         self.model = None
-        if family == "gru":
+        if family in {"gru", "fnn"}:
             if self.bundle["config"].get("decoder_start") == "random":
                 raise ValueError("Serving requires deterministic decoding")
-            self.model = ForecastGRU(self.bundle["config"])
+            model_class = ForecastGRU if family == "gru" else ForecastFNN
+            self.model = model_class(self.bundle["config"])
             self.model.load_state_dict(self.bundle["state"])
             self.model.eval()
 
@@ -96,7 +97,7 @@ class Predictor:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifact", type=Path, required=True)
-    parser.add_argument("--family", choices=["rf", "gru"], required=True)
+    parser.add_argument("--family", choices=["rf", "gru", "fnn"], required=True)
     parser.add_argument("--request", type=Path, required=True)
     args = parser.parse_args()
     torch.set_num_threads(1)

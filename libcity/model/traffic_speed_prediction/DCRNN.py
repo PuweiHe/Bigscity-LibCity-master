@@ -102,6 +102,9 @@ class GCONV(nn.Module):
             pass
         else:
             for support in self._supports:
+                # Each diffusion support starts from the same input signal.
+                x0 = torch.reshape(inputs_and_state.permute(1, 2, 0),
+                                   (self._num_nodes, input_size * batch_size))
                 # T1=L x1=T1*x=L*x
                 x1 = torch.sparse.mm(support, x0)  # supports: n*n; x0: n*(total_arg_size * batch_size)
                 x = self._concat(x, x1)  # (2, num_nodes, total_arg_size * batch_size)
@@ -204,9 +207,10 @@ class DCGRUCell(nn.Module):
         lap = lap.tocoo()
         indices = np.column_stack((lap.row, lap.col))
         # this is to ensure row-major ordering to equal torch.sparse.sparse_reorder(L)
-        indices = indices[np.lexsort((indices[:, 0], indices[:, 1]))]
-        lap = torch.sparse_coo_tensor(indices.T, lap.data, lap.shape, device=device)
-        return lap
+        order = np.lexsort((indices[:, 1], indices[:, 0]))
+        lap = torch.sparse_coo_tensor(indices[order].T, lap.data[order],
+                                     lap.shape, device=device)
+        return lap.coalesce()
 
     def forward(self, inputs, hx):
         """
@@ -344,6 +348,7 @@ class DCRNN(AbstractTrafficStateModel, Seq2SeqAttrs):
         self.decoder_model = DecoderModel(config, self.adj_mx)
 
         self.use_curriculum_learning = config.get('use_curriculum_learning', False)
+        self.residual_last_speed = config.get('residual_last_speed', False)
         self.input_window = config.get('input_window', 1)
         self.output_window = config.get('output_window', 1)
         self.device = config.get('device', torch.device('cpu'))
@@ -437,6 +442,8 @@ class DCRNN(AbstractTrafficStateModel, Seq2SeqAttrs):
         if batches_seen == 0:
             self._logger.info("Total trainable parameters {}".format(count_parameters(self)))
         outputs = outputs.view(self.output_window, batch_size, self.num_nodes, self.output_dim).permute(1, 0, 2, 3)
+        if self.residual_last_speed:
+            outputs = outputs + batch['X'][:, -1:, :, :self.output_dim]
         return outputs
 
     def calculate_loss(self, batch, batches_seen=None):

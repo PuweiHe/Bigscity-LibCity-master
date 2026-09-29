@@ -2,7 +2,13 @@
 
 **Reproduce a baseline, diagnose noisy targets, and ship a smaller forecasting model.**
 
-An internship-derived traffic analytics project extended with a reproducible Random Forest / PyTorch GRU benchmark and a validated FastAPI inference service. The concrete task is to predict the **next minute's mean vehicle speed from the previous four minutes** for offline construction-road monitoring.
+An internship-derived traffic analytics project extended with reproducible Random Forest, LibCity SVR/FNN/GRU comparisons, a validated FastAPI inference service, and a public **METR-LA graph forecasting** study. The internship-recording task predicts next-minute mean vehicle speed; the public Los Angeles task predicts 5-minute-ahead speed at 207 road sensors. [Model selection](docs/forecasting/MODEL_SELECTION.md) · [METR-LA protocol and graph-model results](docs/forecasting/METR_LA_STUDY.md).
+
+## Public Los Angeles traffic forecasting: STGCN and DCRNN
+
+Using the public 34,272-timestamp METR-LA speed series and road graph, I reproduced LibCity's Chebyshev **STGCN** and diffusion-convolutional **DCRNN** for 207-sensor 5-minute speed prediction. A chronological 70/10/20 split, train-only scaling, sampled windows, validation tuning, and a persistence comparator make the evaluation inspectable. On 571 held-out hourly-start windows, validation-selected STGCN achieved **2.421 mph MAE** and DCRNN **2.451 mph**, versus **2.815 mph** for the last-speed baseline (13.99% and 12.95% lower MAE). These are exploratory offline results, not original-paper scores or live congestion improvements.
+
+The repository fixes DCRNN's sparse graph coordinate/value alignment and cross-support diffusion state, adds opt-in residual heads, and publishes candidate failures and compact checkpoints. The larger residual candidates did not improve validation MAE. [Full protocol, limitations, and reproduction](docs/forecasting/METR_LA_STUDY.md) · [Metrics and candidate configs](docs/forecasting/metr_la_report.json).
 
 ![Chronological test results](docs/forecasting/benchmark.png)
 
@@ -21,6 +27,8 @@ Chronological recording-level split: **6,418 source vehicle rows → 132 trainin
 
 The tuned GRU uses **609 parameters vs 26,369 (97.69% fewer)**. Its MAE seed standard deviation fell from 0.630 to 0.021 km/h on this benchmark. The simple moving mean is already strong: the GRU improves on it by only **0.97%**. This small retrospective study does not establish deployment impact or statistical superiority on other roads.
 
+**LibCity catalog extension:** We reproduced the repository's SVR and FNN baselines for the same speed target. The opt-in two-layer mean-residual FNN reduced later-session MAE from **6.435 to 5.480 km/h (14.84%)** versus its own untuned baseline, using 817 versus 2,305 parameters. It did **not** beat the 5.365 moving mean or 5.312 compact GRU. A validation-selected linear SVR worsened later-session MAE from 5.497 to 6.374; that failure is reported rather than hidden. The earlier test sessions had already been inspected, so these are exploratory retrospective comparisons. [Model-by-model method and results](docs/forecasting/MODEL_SELECTION.md) · [SVR/FNN search](docs/forecasting/catalog_selection.json) · [SVR/FNN report](docs/forecasting/catalog_test_report.json)
+
 **Follow-up architecture ablation (September 2026):** A direct one-step GRU head removed the autoregressive decoder and was tuned over six hidden-size/residual-scale settings, using the same three seeds and validation sessions. Its best validation MAE was **6.020 km/h**, versus **6.111** for the selected compact Seq2Seq GRU, but its retrospective test MAE was **5.558 km/h**, worse than the compact model's **5.312**. The original holdout had already been inspected before this follow-up, so this comparison is exploratory, not a fresh blind test. The direct model is included as a reproducible negative result; it does not replace the served model. [Candidate scores](docs/forecasting/direct_gru_validation.json) · [Retrospective report](docs/forecasting/direct_gru_test_report.json)
 
 [Full test results](docs/forecasting/test_report.json) · [Search history](docs/forecasting/selection.json) · [Protocol](docs/forecasting/PROTOCOL.md) · [Model card](docs/forecasting/MODEL_CARD.md)
@@ -32,6 +40,8 @@ The tuned GRU uses **609 parameters vs 26,369 (97.69% fewer)**. Its MAE seed sta
 3. **Used validation evidence to change the model.** A last-value residual model did not help. The second search learned small corrections around the four-minute mean, controlled tree complexity, reduced GRU hidden size from 64 to 8, and used Huber loss and weight decay. Both search rounds and all seeds are retained.
 4. **Made inference usable.** Removed the future-label requirement in Seq2Seq, added opt-in deterministic initialization, and packaged train-serving-consistent normalization, schema validation, model loading at startup, `/health`, `/predict`, and regression tests.
 5. **Tested a task-specific architecture.** Added a decoder-free direct GRU with shape/gradient regression tests and a write-once validation/evaluation workflow. The simpler architecture won validation but lost on the two later sessions, illustrating why model selection and generalization evidence must be distinguished.
+6. **Adapted two more models from the LibCity list.** Fixed the FNN's documented two-layer option without changing the inherited default, added a restrained mean-residual head, and evaluated a train-only-scaled SVR on the same one-step speed target. Published the full search and both failed and successful comparisons.
+7. **Reproduced graph models on public METR-LA.** Trained STGCN and DCRNN on all 207 sensors, fixed DCRNN sparse diffusion correctness, and selected resource-conscious graph configurations against a last-speed baseline on a chronological split.
 
 ```mermaid
 flowchart LR
@@ -87,6 +97,9 @@ To reproduce the later architecture ablation, use a new output path for each run
 ```bash
 python -m traffic_forecasting.direct_study --data-root /path/to/山东高速数据分析-半幅封闭 --output outputs/direct_validation.json
 python -m traffic_forecasting.direct_evaluate --data-root /path/to/山东高速数据分析-半幅封闭 --study outputs/direct_validation.json --artifact outputs/direct_gru.joblib --report outputs/direct_report.json
+
+python -m traffic_forecasting.catalog_study select --data-root /path/to/山东高速数据分析-半幅封闭 --output outputs/catalog_study
+python -m traffic_forecasting.catalog_study evaluate --data-root /path/to/山东高速数据分析-半幅封闭 --output outputs/catalog_study
 ```
 
 ## Tests and engineering evidence
@@ -105,5 +118,6 @@ A separate [DTW study](docs/portfolio/README.md) documents a failed approximate-
 
 - Original project context: 2024 internship traffic analysis at the Institute of Automation, Chinese Academy of Sciences.
 - Reproducibility, tuning, inference-service and reporting additions: September 2026 portfolio reconstruction, based on the retained internship files.
+- The public METR-LA STGCN/DCRNN experiment is also September 2026 portfolio work, separate from the 2024 internship dataset.
 - LibCity framework/model code is inherited from its contributors, not claimed as an original framework implementation. See [upstream README](UPSTREAM_README.md), [Apache-2.0 license](LICENSE.txt), and [the focused Seq2Seq patch](docs/portfolio/seq2seq_changes.patch).
 - Added work is concentrated in `traffic_forecasting/`, `traffic_analysis/`, `tests/`, `scripts/` and the documented Seq2Seq changes. No original published LibCity benchmark score is claimed to have been reproduced.

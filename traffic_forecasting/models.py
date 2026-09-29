@@ -20,6 +20,38 @@ def seq2seq_class():
     return module.Seq2Seq
 
 
+def fnn_class():
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "libcity/model/traffic_speed_prediction/FNN.py"
+    )
+    spec = importlib.util.spec_from_file_location("forecast_fnn", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.FNN
+
+
+class ForecastFNN(nn.Module):
+    """Adapt LibCity's node-wise FNN to one observed station and one-step speed."""
+
+    def __init__(self, config):
+        super().__init__()
+        self.model = fnn_class()(
+            {
+                "input_window": 4,
+                "output_window": 1,
+                "hidden_size": config["hidden_size"],
+                "hidden_size_2": config.get("hidden_size_2"),
+                "residual_anchor": config.get("residual_anchor"),
+                "residual_scale": config.get("residual_scale", 1.0),
+            },
+            {"num_nodes": 1, "feature_dim": 4, "output_dim": 1},
+        )
+
+    def forward(self, x):
+        return self.model({"X": x.unsqueeze(2)})[:, 0, 0, 0]
+
+
 class ForecastGRU(nn.Module):
     """Opt-in residual correction around the last observed standardized speed."""
 

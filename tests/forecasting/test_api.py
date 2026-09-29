@@ -9,7 +9,8 @@ import numpy as np
 from fastapi.testclient import TestClient
 
 from traffic_forecasting.api import create_app
-from traffic_forecasting.inference import Predictor
+from traffic_forecasting.catalog_study import predict_fnn
+from traffic_forecasting.inference import Predictor, validate_request
 from traffic_forecasting.models import ForecastGRU
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -76,3 +77,16 @@ class APITests(unittest.TestCase):
         with TestClient(create_app(self.path, "gru")) as client:
             result = client.post("/predict", json=self.payload).json()
         self.assertEqual(result, p.predict(self.payload))
+
+    def test_published_fnn_checkpoint_uses_saved_normalizer(self):
+        artifact = ROOT / "artifacts/forecasting/fnn_6.joblib"
+        predictor = Predictor(artifact, "fnn")
+        x, _ = validate_request(self.payload)
+        expected = predict_fnn(predictor.bundle, x)[0]
+        self.assertAlmostEqual(predictor.predict(self.payload)["mean_speed_kmh"],
+                               float(expected), places=5)
+        with TestClient(create_app(artifact, "fnn")) as client:
+            response = client.post("/predict", json=self.payload)
+            self.assertEqual(response.status_code, 200)
+            self.assertAlmostEqual(response.json()["mean_speed_kmh"],
+                                   float(expected), places=5)

@@ -1,0 +1,141 @@
+{
+  "dataset": "METR-LA",
+  "source_shape": [
+    34272,
+    207
+  ],
+  "nodes": 207,
+  "unit": "mph",
+  "target": "next 5-minute traffic speed",
+  "split_boundaries": [
+    23990,
+    27417
+  ],
+  "window_counts": {
+    "train": 1000,
+    "validation": 285,
+    "test": 571
+  },
+  "train_only_mean": 58.584205627441406,
+  "train_only_std": 12.822882652282715,
+  "seed": 42,
+  "epochs": 8,
+  "models": {
+    "STGCN": {
+      "trials": [
+        {
+          "config": {
+            "Ks": 3,
+            "Kt": 3,
+            "blocks": [
+              [
+                1,
+                8,
+                16
+              ],
+              [
+                16,
+                8,
+                16
+              ]
+            ],
+            "dropout": 0.0,
+            "graph_conv_type": "chebconv",
+            "learning_rate": 0.003
+          },
+          "epoch": 8,
+          "validation": {
+            "mae_mph": 2.2265839957118403,
+            "rmse_mph": 3.884058266507883,
+            "persistence_mae_mph": 2.6231954806040836,
+            "observations": 55130
+          }
+        },
+        {
+          "config": {
+            "Ks": 3,
+            "Kt": 3,
+            "blocks": [
+              [
+                1,
+                16,
+                32
+              ],
+              [
+                32,
+                16,
+                32
+              ]
+            ],
+            "dropout": 0.1,
+            "graph_conv_type": "chebconv",
+            "learning_rate": 0.001,
+            "residual_last_speed": true
+          },
+          "epoch": 7,
+          "validation": {
+            "mae_mph": 2.227010555395344,
+            "rmse_mph": 3.954042276960245,
+            "persistence_mae_mph": 2.6231954806040836,
+            "observations": 55130
+          }
+        }
+      ],
+      "selected_index": 0,
+      "test": {
+        "mae_mph": 2.4212867663909123,
+        "rmse_mph": 4.177631171253689,
+        "persistence_mae_mph": 2.815259504259441,
+        "observations": 103808
+      },
+      "parameter_count": 24425
+    },
+    "DCRNN": {
+      "trials": [
+        {
+          "config": {
+            "max_diffusion_step": 1,
+            "num_rnn_layers": 1,
+            "rnn_units": 16,
+            "filter_type": "dual_random_walk",
+            "use_curriculum_learning": false,
+            "learning_rate": 0.003
+          },
+          "epoch": 8,
+          "validation": {
+            "mae_mph": 2.2508417714556788,
+            "rmse_mph": 3.945454564606168,
+            "persistence_mae_mph": 2.6231954806040836,
+            "observations": 55130
+          }
+        },
+        {
+          "config": {
+            "max_diffusion_step": 2,
+            "num_rnn_layers": 1,
+            "rnn_units": 32,
+            "filter_type": "dual_random_walk",
+            "use_curriculum_learning": false,
+            "learning_rate": 0.001,
+            "residual_last_speed": true
+          },
+          "epoch": 8,
+          "validation": {
+            "mae_mph": 2.253344682277968,
+            "rmse_mph": 3.962524223257635,
+            "persistence_mae_mph": 2.6231954806040836,
+            "observations": 55130
+          }
+        }
+      ],
+      "selected_index": 0,
+      "test": {
+        "mae_mph": 2.450597068678436,
+        "rmse_mph": 4.25667043104257,
+        "persistence_mae_mph": 2.815259504259441,
+        "observations": 103808
+      },
+      "parameter_count": 5009
+    }
+  }
+}
