@@ -1,11 +1,15 @@
 import importlib.util
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import scipy.sparse as sp
 import torch
+from torch.utils.data import DataLoader, TensorDataset
 
+from traffic_forecasting import metr_la_study
 from traffic_forecasting.metr_la_study import Windows, last_available_speed, starts_for_split
 
 
@@ -119,6 +123,37 @@ class GraphModelTests(unittest.TestCase):
         x[:, -1] = 0
         result = model({'X': x})
         torch.testing.assert_close(result, torch.ones(2, 1, 2, 1))
+
+    def test_sttn_training_resumes_after_interrupted_epoch(self):
+        adj = np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]], dtype=np.float32)
+        x = torch.rand(4, 12, 3, 1)
+        y = torch.rand(4, 1, 3, 1)
+        loader = DataLoader(TensorDataset(x, y), batch_size=2)
+        loaders = {'train': loader, 'validation': loader}
+        config = {'embed_dim': 8, 'num_layers': 1, 'num_heads': 2,
+                  'forward_expansion': 2, 'dropout_rate': .1,
+                  'learning_rate': .001, 'residual_last_speed': True}
+        evaluate = metr_la_study.evaluate
+        calls = 0
+
+        def interrupt_after_first_epoch(*args):
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                raise RuntimeError('simulated interruption')
+            return evaluate(*args)
+
+        with tempfile.TemporaryDirectory() as directory:
+            progress = Path(directory) / 'candidate.progress.pt'
+            with patch.object(metr_la_study, 'evaluate', side_effect=interrupt_after_first_epoch):
+                with self.assertRaisesRegex(RuntimeError, 'simulated interruption'):
+                    metr_la_study.run_model('STTN', config, adj, loaders, .5, 1., 2, 42, progress)
+            self.assertEqual(torch.load(progress, weights_only=True)['completed_epoch'], 1)
+            model, best = metr_la_study.run_model('STTN', config, adj, loaders,
+                                                   .5, 1., 2, 42, progress)
+            self.assertEqual(torch.load(progress, weights_only=True)['completed_epoch'], 2)
+            self.assertIn(best['epoch'], (1, 2))
+            self.assertEqual(tuple(model({'X': x}).shape), (4, 1, 3, 1))
 
 
 if __name__ == '__main__':

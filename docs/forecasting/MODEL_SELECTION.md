@@ -1,6 +1,6 @@
 # Model selection from the LibCity catalog
 
-The [LibCity reproduced-model list](https://bigscity-libcity-docs.readthedocs.io/zh-cn/latest/user_guide/model.html) groups SVR, FNN, and Seq2Seq among its time-series and traffic-state baselines; STGCN and DCRNN are graph-based traffic-speed models. The retained internship data support a one-station next-minute speed task. A [separate public METR-LA study](METR_LA_STUDY.md) supports spatial graph forecasting.
+The [LibCity reproduced-model list](https://bigscity-libcity-docs.readthedocs.io/zh-cn/latest/user_guide/model.html) groups SVR, FNN, and Seq2Seq among its time-series and traffic-state baselines; STGCN and DCRNN are graph-based traffic-speed models, while STTN uses spatial and temporal Transformer blocks. The retained internship data support a one-station next-minute speed task. A [separate public METR-LA study](METR_LA_STUDY.md) supports network-wide graph and Transformer forecasting.
 
 | Catalog model | Repository implementation | Decision |
 |---|---|---|
@@ -8,8 +8,9 @@ The [LibCity reproduced-model list](https://bigscity-libcity-docs.readthedocs.io
 | FNN | `libcity/model/traffic_speed_prediction/FNN.py` | Reproduced the original one-hidden-layer baseline; added optional second hidden layer and mean-speed residual correction without changing its defaults. |
 | GRU Seq2Seq | `libcity/model/traffic_speed_prediction/Seq2Seq.py` | Reproduced and tuned in the primary study. Deterministic label-free inference and compact residual prediction are documented in the main model card. |
 | STGCN / DCRNN | `libcity/model/traffic_speed_prediction/STGCN.py` / `DCRNN.py` | Excluded from the private-recording comparison because those 13 sessions have no synchronized sensor graph. Reproduced and tuned separately with the public METR-LA speed series and road adjacency matrix. |
+| STTN | `libcity/model/traffic_speed_prediction/STTN.py` | Reproduced spatial-temporal attention on the same public METR-LA split; compared compact, residual, and wider/deeper variants. The validation-selected model did not beat STGCN on the later test period. |
 
-All models use the same 13 source Excel recordings and session-level chronological 9/2/2 split: 132 train, 82 validation, 112 later test windows. The original test sessions were opened in the earlier GRU/RF benchmark. **The SVR/FNN extension below is retrospective and exploratory, not a new blind test.** Preprocessing parameters and the standardizer fit train data only. The metric is MAE in km/h; the 4-minute moving mean is a strong nonlearned comparator.
+The single-station models in the table below use the same 13 source Excel recordings and session-level chronological 9/2/2 split: 132 train, 82 validation, 112 later test windows. The original test sessions were opened in the earlier GRU/RF benchmark. **The SVR/FNN extension below is retrospective and exploratory, not a new blind test.** Preprocessing parameters and the standardizer fit train data only. The metric is MAE in km/h; the 4-minute moving mean is a strong nonlearned comparator. STGCN, DCRNN, and STTN use the separate public [METR-LA protocol](METR_LA_STUDY.md).
 
 | Model | Validation MAE | Later-session MAE | Interpretation |
 |---|---:|---:|---|

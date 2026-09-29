@@ -1,0 +1,4 @@
+# Versions used for the local METR-LA STGCN/DCRNN/STTN runs (Python 3.10.19).
+numpy==1.26.4
+scipy==1.12.0
+torch==2.10.0

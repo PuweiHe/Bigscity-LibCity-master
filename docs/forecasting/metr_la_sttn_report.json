@@ -1,0 +1,97 @@
+{
+  "dataset": "METR-LA",
+  "source_shape": [
+    34272,
+    207
+  ],
+  "nodes": 207,
+  "unit": "mph",
+  "target": "next 5-minute traffic speed",
+  "split_boundaries": [
+    23990,
+    27417
+  ],
+  "window_counts": {
+    "train": 5995,
+    "validation": 3415,
+    "test": 6843
+  },
+  "train_only_mean": 58.584205627441406,
+  "train_only_std": 12.822882652282715,
+  "seed": 42,
+  "epochs": 30,
+  "batch_size": 16,
+  "models": {
+    "STTN": {
+      "trials": [
+        {
+          "config": {
+            "embed_dim": 16,
+            "num_layers": 1,
+            "num_heads": 2,
+            "forward_expansion": 2,
+            "dropout_rate": 0.1,
+            "learning_rate": 0.001,
+            "residual_last_speed": true
+          },
+          "epoch": 30,
+          "validation": {
+            "mae_mph": 2.2443459902575347,
+            "rmse_mph": 3.949253565519384,
+            "persistence_mae_mph": 2.63171683508508,
+            "observations": 657549
+          }
+        },
+        {
+          "config": {
+            "embed_dim": 16,
+            "num_layers": 1,
+            "num_heads": 2,
+            "forward_expansion": 2,
+            "dropout_rate": 0.1,
+            "learning_rate": 0.001
+          },
+          "epoch": 16,
+          "validation": {
+            "mae_mph": 2.2888902265127355,
+            "rmse_mph": 4.095925478660032,
+            "persistence_mae_mph": 2.63171683508508,
+            "observations": 657549
+          }
+        },
+        {
+          "config": {
+            "embed_dim": 32,
+            "num_layers": 2,
+            "num_heads": 4,
+            "forward_expansion": 2,
+            "dropout_rate": 0.1,
+            "learning_rate": 0.0005,
+            "residual_last_speed": true,
+            "residual_scale": 0.5
+          },
+          "epoch": 27,
+          "validation": {
+            "mae_mph": 2.2403388348029423,
+            "rmse_mph": 4.002637253316471,
+            "persistence_mae_mph": 2.63171683508508,
+            "observations": 657549
+          }
+        }
+      ],
+      "selected_index": 2,
+      "parameter_count": 152688,
+      "test": {
+        "mae_mph": 2.4300647547125545,
+        "rmse_mph": 4.283098004300751,
+        "persistence_mae_mph": 2.815136347080722,
+        "observations": 1244780
+      }
+    }
+  },
+  "sttn_candidate_original_indices": [
+    1,
+    0,
+    2
+  ]
+}
