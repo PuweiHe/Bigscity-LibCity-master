@@ -169,6 +169,8 @@ def main():
     parser.add_argument('--batch-size', type=int, default=8)
     parser.add_argument('--sttn-candidate-index', type=int,
                         help='Train only this STTN candidate; useful after a validation search')
+    parser.add_argument('--sttn-candidate-order', nargs='+', type=int,
+                        help='Train every STTN candidate in the specified index order')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--validation-only', action='store_true',
                       help='Select and save checkpoints without reading the test partition')
@@ -221,6 +223,13 @@ def main():
              'residual_last_speed': True, 'residual_scale': .5},
         ],
     }
+    if args.sttn_candidate_index is not None and args.sttn_candidate_order is not None:
+        raise ValueError('Select either one STTN candidate or an ordered full search')
+    if args.sttn_candidate_order is not None:
+        order = args.sttn_candidate_order
+        if args.models != ['STTN'] or sorted(order) != list(range(len(candidates['STTN']))):
+            raise ValueError('--sttn-candidate-order must list every STTN index once')
+        candidates['STTN'] = [candidates['STTN'][index] for index in order]
     if args.sttn_candidate_index is not None:
         if args.models != ['STTN'] or not 0 <= args.sttn_candidate_index < len(candidates['STTN']):
             raise ValueError('--sttn-candidate-index requires one valid STTN model index')
@@ -234,6 +243,8 @@ def main():
               'epochs': args.epochs, 'batch_size': args.batch_size, 'models': {}}
     if args.sttn_candidate_index is not None:
         report['sttn_candidate_original_index'] = args.sttn_candidate_index
+    if args.sttn_candidate_order is not None:
+        report['sttn_candidate_original_indices'] = args.sttn_candidate_order
     report_path = args.output_dir / 'report.json'
     if args.evaluation_only:
         report = json.loads(report_path.read_text())
