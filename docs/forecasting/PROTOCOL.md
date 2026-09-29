@@ -24,4 +24,4 @@ A second and final validation search changes the residual anchor to the four-min
 
 ## Retrospective follow-up after the test was opened
 
-The September 2026 direct-GRU ablation is a new, explicitly exploratory study. It compares hidden sizes {8,16,32} and residual scales {0.1,0.25} on the original validation split, selects by three-seed mean validation MAE, then records the result on the previously inspected test sessions once. It must not be characterized as the sealed test protocol above or used to revise the original benchmark claim.
+The direct-GRU ablation in the September 2026 reconstruction is explicitly exploratory. It compares hidden sizes {8,16,32} and residual scales {0.1,0.25} on the original validation split, selects by three-seed mean validation MAE, then records the result on the previously inspected test sessions once. It must not be characterized as the sealed test protocol above or used to revise the original benchmark claim.
