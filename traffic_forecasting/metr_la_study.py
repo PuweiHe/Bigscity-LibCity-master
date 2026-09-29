@@ -55,6 +55,25 @@ def masked_mae(pred, target, mean, std):
     return torch.abs(pred[valid] - target[valid]).mean() * std
 
 
+def last_available_speed(x):
+    """Use the most recent observed speed, or the train mean if all 12 are missing."""
+    observed = x != 0
+    reverse_index = observed.flip(1).int().argmax(dim=1, keepdim=True)
+    index = x.shape[1] - 1 - reverse_index
+    anchor = torch.gather(x, 1, index)
+    return torch.where(observed.any(dim=1, keepdim=True), anchor, 0)
+
+
+def persistence_mae(loader, std):
+    error = 0.0
+    count = 0
+    for x, y in loader:
+        valid = y != 0
+        error += ((last_available_speed(x) - y)[valid] * std).abs().sum().item()
+        count += valid.sum().item()
+    return error / count
+
+
 def evaluate(model, loader, mean, std):
     model.eval()
     error = 0.0
@@ -69,7 +88,7 @@ def evaluate(model, loader, mean, std):
             error += delta.abs().sum().item()
             squared += delta.square().sum().item()
             count += valid.sum().item()
-            anchor = x[:, -1:, :, :]
+            anchor = last_available_speed(x)
             baseline_error += ((anchor - y)[valid] * std).abs().sum().item()
     return {'mae_mph': error / count, 'rmse_mph': (squared / count) ** 0.5,
             'persistence_mae_mph': baseline_error / count, 'observations': count}
@@ -116,11 +135,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-dir', type=Path, default=Path('raw_data/METR_LA'))
     parser.add_argument('--output-dir', type=Path, default=Path('outputs/metr_la'))
-    parser.add_argument('--epochs', type=int, default=3)
+    parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--train-stride', type=int, default=24)
     parser.add_argument('--eval-stride', type=int, default=12)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--models', nargs='+', default=['STGCN', 'DCRNN'])
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--validation-only', action='store_true',
+                      help='Select and save checkpoints without reading the test partition')
+    mode.add_argument('--evaluation-only', action='store_true',
+                      help='Evaluate previously selected checkpoints on the test partition')
     args = parser.parse_args()
     torch.set_num_threads(4)
     series = np.load(args.data_dir / 'METR_LA.npz')['data'].astype(np.float32)
@@ -165,6 +189,32 @@ def main():
               'window_counts': {k: len(v) for k, v in starts.items()},
               'train_only_mean': mean, 'train_only_std': std, 'seed': args.seed,
               'epochs': args.epochs, 'models': {}}
+    report_path = args.output_dir / 'report.json'
+    if args.evaluation_only:
+        report = json.loads(report_path.read_text())
+        if (report['split_boundaries'] != [train_end, validation_end]
+                or report['source_shape'] != list(series.shape)
+                or report['window_counts']['test'] != len(starts['test'])
+                or not np.isclose(report['train_only_mean'], mean)
+                or not np.isclose(report['train_only_std'], std)):
+            raise ValueError('Checkpoint report does not match dataset or evaluation split')
+        validation_baseline = persistence_mae(loaders['validation'], std)
+        for name in args.models:
+            checkpoint = torch.load(args.output_dir / f'{name.lower()}.pt',
+                                    map_location='cpu', weights_only=True)
+            if not np.isclose(checkpoint['mean'], mean) or not np.isclose(checkpoint['std'], std):
+                raise ValueError(f'{name} checkpoint normalization does not match dataset')
+            config = {'device': torch.device('cpu'), 'input_window': 12, 'output_window': 1,
+                      **checkpoint['config']}
+            model = model_class(name)(config, {'num_nodes': adj.shape[0], 'feature_dim': 1,
+                                               'output_dim': 1, 'adj_mx': adj})
+            model.load_state_dict(checkpoint['state_dict'])
+            for trial in report['models'][name]['trials']:
+                trial['validation']['persistence_mae_mph'] = validation_baseline
+            report['models'][name]['test'] = evaluate(model, loaders['test'], mean, std)
+        report_path.write_text(json.dumps(report, indent=2) + '\n')
+        print(json.dumps(report, indent=2))
+        return
     for name in args.models:
         trials = []
         best_model = None
@@ -174,13 +224,15 @@ def main():
             if best_model is None or result['validation']['mae_mph'] < trials[best_model[0]]['validation']['mae_mph']:
                 best_model = (len(trials) - 1, model)
         selected_index, selected_model = best_model
-        test = evaluate(selected_model, loaders['test'], mean, std)
+        test = None if args.validation_only else evaluate(selected_model, loaders['test'], mean, std)
         torch.save({'model': name, 'config': candidates[name][selected_index],
                     'mean': mean, 'std': std, 'state_dict': selected_model.state_dict()},
                    args.output_dir / f'{name.lower()}.pt')
-        report['models'][name] = {'trials': trials, 'selected_index': selected_index, 'test': test,
+        report['models'][name] = {'trials': trials, 'selected_index': selected_index,
                                   'parameter_count': sum(p.numel() for p in selected_model.parameters())}
-        (args.output_dir / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+        if test is not None:
+            report['models'][name]['test'] = test
+        report_path.write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))
 
 

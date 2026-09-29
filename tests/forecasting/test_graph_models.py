@@ -6,7 +6,7 @@ import numpy as np
 import scipy.sparse as sp
 import torch
 
-from traffic_forecasting.metr_la_study import Windows, starts_for_split
+from traffic_forecasting.metr_la_study import Windows, last_available_speed, starts_for_split
 
 
 def load_graph_model(name):
@@ -25,6 +25,19 @@ class GraphModelTests(unittest.TestCase):
         actual = dcrnn.DCGRUCell._build_sparse_matrix(lap, torch.device('cpu')).to_dense().numpy()
         np.testing.assert_array_equal(actual, lap.toarray())
 
+    def test_each_diffusion_support_starts_from_original_signal(self):
+        dcrnn = load_graph_model('DCRNN')
+        first = torch.tensor([[0., 1.], [1., 0.]]).to_sparse()
+        second = torch.tensor([[2., 0.], [0., 3.]]).to_sparse()
+        layer = dcrnn.GCONV(2, 2, [first, second], torch.device('cpu'),
+                            input_dim=1, hid_dim=1, output_dim=10)
+        with torch.no_grad():
+            layer.weight.copy_(torch.eye(10))
+            layer.biases.zero_()
+        output = layer(torch.tensor([[1., 2.]]), torch.zeros(1, 2)).reshape(2, 10)
+        # Channel 0, support 2, first diffusion step is B @ [1, 2].
+        torch.testing.assert_close(output[:, 3], torch.tensor([2., 6.]))
+
     def test_split_windows_do_not_cross_boundaries(self):
         series = np.arange(100 * 3, dtype=np.float32).reshape(100, 3) + 1
         starts = starts_for_split(70, 80, 2)
@@ -35,6 +48,12 @@ class GraphModelTests(unittest.TestCase):
         self.assertEqual(tuple(x.shape), (12, 3, 1))
         self.assertEqual(tuple(y.shape), (1, 3, 1))
         self.assertLessEqual(int(starts[-1] + 12), 94)
+
+    def test_persistence_uses_last_available_reading(self):
+        x = torch.tensor([[[[2.]], [[0.]], [[0.]]],
+                          [[[0.]], [[0.]], [[0.]]]])
+        torch.testing.assert_close(last_available_speed(x),
+                                   torch.tensor([[[[2.]]], [[[0.]]]]))
 
     def test_stgcn_residual_prediction_shape_and_gradient(self):
         stgcn = load_graph_model('STGCN')
