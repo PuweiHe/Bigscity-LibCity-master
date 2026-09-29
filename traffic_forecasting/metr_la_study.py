@@ -7,6 +7,7 @@ redistributed. Model selection uses validation MAE; test is evaluated once.
 import argparse
 import importlib.util
 import json
+import os
 import random
 import time
 from pathlib import Path
@@ -94,7 +95,8 @@ def evaluate(model, loader, mean, std):
             'persistence_mae_mph': baseline_error / count, 'observations': count}
 
 
-def run_model(name, config, adj, loaders, mean, std, epochs, seed):
+def run_model(name, config, adj, loaders, mean, std, epochs, seed,
+              progress_path=None):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
@@ -106,8 +108,21 @@ def run_model(name, config, adj, loaders, mean, std, epochs, seed):
     model = model_class(name)(common, features)
     optimizer = torch.optim.Adam(model.parameters(), lr=config['learning_rate'])
     best = None
+    first_epoch = 0
+    if progress_path is not None and progress_path.exists():
+        progress = torch.load(progress_path, map_location='cpu', weights_only=True)
+        if (progress['model'] != name or progress['config'] != config
+                or progress['seed'] != seed or progress['epochs'] != epochs
+                or not np.isclose(progress['mean'], mean)
+                or not np.isclose(progress['std'], std)):
+            raise ValueError('Training progress does not match this experiment')
+        model.load_state_dict(progress['current_model'])
+        optimizer.load_state_dict(progress['optimizer'])
+        torch.set_rng_state(progress['torch_rng'])
+        best = progress['best']
+        first_epoch = progress['completed_epoch']
     started = time.monotonic()
-    for epoch in range(epochs):
+    for epoch in range(first_epoch, epochs):
         model.train()
         losses = []
         for x, y in loaders['train']:
@@ -127,8 +142,18 @@ def run_model(name, config, adj, loaders, mean, std, epochs, seed):
         if best is None or validation['mae_mph'] < best['validation']['mae_mph']:
             best = {'epoch': epoch + 1, 'validation': validation,
                     'state': {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}}
-    model.load_state_dict(best.pop('state'))
-    return model, best
+        if progress_path is not None:
+            progress = {'model': name, 'config': config, 'seed': seed,
+                        'epochs': epochs, 'mean': mean, 'std': std,
+                        'completed_epoch': epoch + 1,
+                        'current_model': model.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'torch_rng': torch.get_rng_state(), 'best': best}
+            temporary = progress_path.with_suffix('.tmp')
+            torch.save(progress, temporary)
+            os.replace(temporary, progress_path)
+    model.load_state_dict(best['state'])
+    return model, {'epoch': best['epoch'], 'validation': best['validation']}
 
 
 def main():
@@ -142,6 +167,8 @@ def main():
     parser.add_argument('--models', nargs='+', choices=['STGCN', 'DCRNN', 'STTN'],
                         default=['STGCN', 'DCRNN'])
     parser.add_argument('--batch-size', type=int, default=8)
+    parser.add_argument('--sttn-candidate-index', type=int,
+                        help='Train only this STTN candidate; useful after a validation search')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--validation-only', action='store_true',
                       help='Select and save checkpoints without reading the test partition')
@@ -194,6 +221,10 @@ def main():
              'residual_last_speed': True, 'residual_scale': .5},
         ],
     }
+    if args.sttn_candidate_index is not None:
+        if args.models != ['STTN'] or not 0 <= args.sttn_candidate_index < len(candidates['STTN']):
+            raise ValueError('--sttn-candidate-index requires one valid STTN model index')
+        candidates['STTN'] = [candidates['STTN'][args.sttn_candidate_index]]
     args.output_dir.mkdir(parents=True, exist_ok=True)
     report = {'dataset': 'METR-LA', 'source_shape': list(series.shape), 'nodes': int(adj.shape[0]),
               'unit': 'mph', 'target': 'next 5-minute traffic speed',
@@ -201,6 +232,8 @@ def main():
               'window_counts': {k: len(v) for k, v in starts.items()},
               'train_only_mean': mean, 'train_only_std': std, 'seed': args.seed,
               'epochs': args.epochs, 'batch_size': args.batch_size, 'models': {}}
+    if args.sttn_candidate_index is not None:
+        report['sttn_candidate_original_index'] = args.sttn_candidate_index
     report_path = args.output_dir / 'report.json'
     if args.evaluation_only:
         report = json.loads(report_path.read_text())
@@ -230,8 +263,11 @@ def main():
     for name in args.models:
         trials = []
         best_model = None
-        for config in candidates[name]:
-            model, result = run_model(name, config, adj, loaders, mean, std, args.epochs, args.seed)
+        for index, config in enumerate(candidates[name]):
+            progress_path = (args.output_dir / f'{name.lower()}_candidate_{index}.progress.pt'
+                             if name == 'STTN' else None)
+            model, result = run_model(name, config, adj, loaders, mean, std,
+                                      args.epochs, args.seed, progress_path)
             trials.append({'config': config, **result})
             if best_model is None or result['validation']['mae_mph'] < trials[best_model[0]]['validation']['mae_mph']:
                 best_model = (len(trials) - 1, model)
