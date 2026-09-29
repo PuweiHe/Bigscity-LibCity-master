@@ -1,4 +1,4 @@
-# Modified September 2026: optional deterministic decoding and label-free inference.
+# Optional deterministic decoding and label-free inference.
 import torch
 import torch.nn as nn
 import random

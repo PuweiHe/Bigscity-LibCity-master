@@ -1,6 +1,6 @@
 # METR-LA graph forecasting study
 
-This September 2026 rerun reconstructs the author's internship-related graph-forecasting work using a **public Los Angeles traffic-speed dataset** to exercise LibCity's STGCN and DCRNN model families. METR-LA is distinct from the private CASIA internship recordings. The task is to predict speed at all 207 loop detectors **5 minutes ahead** from the previous 12 readings (one hour). Speeds are in mph. The measured numbers below come from the rerun, not preserved 2024 result files.
+This study reconstructs the author's 2024 internship-related graph-forecasting work using a **public Los Angeles traffic-speed dataset** to exercise LibCity's STGCN and DCRNN model families. METR-LA is distinct from the private CASIA internship recordings. The task is to predict speed at all 207 loop detectors **5 minutes ahead** from the previous 12 readings (one hour). Speeds are in mph. The measured numbers below come from the documented runs, not recovered original result files.
 
 ## Data and experimental design
 

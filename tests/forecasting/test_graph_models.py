@@ -82,6 +82,44 @@ class GraphModelTests(unittest.TestCase):
         result.sum().backward()
         self.assertTrue(torch.isfinite(x.grad).all())
 
+    def test_sttn_graph_is_stable_across_batches_and_gradients_flow(self):
+        sttn = load_graph_model('STTN')
+        adj = np.array([[0, 1, 0], [0, 0, 1], [1, 0, 0]], dtype=np.float32)
+        model = sttn.STTN({'input_window': 12, 'output_window': 1,
+                           'device': torch.device('cpu'), 'embed_dim': 8,
+                           'num_layers': 1, 'num_heads': 2,
+                           'forward_expansion': 2},
+                          {'num_nodes': 3, 'feature_dim': 1,
+                           'output_dim': 1, 'adj_mx': adj})
+        graph = model.transformer.encoder.layers[0].STransformer
+        before = graph.adj_mx.clone()
+        x = torch.randn(2, 12, 3, 1, requires_grad=True)
+        result = model({'X': x})
+        self.assertEqual(tuple(result.shape), (2, 1, 3, 1))
+        result.sum().backward()
+        self.assertTrue(torch.isfinite(x.grad).all())
+        self.assertTrue(torch.isfinite(result).all())
+        torch.testing.assert_close(graph.adj_mx, before)
+        model({'X': x.detach()})
+        torch.testing.assert_close(graph.adj_mx, before)
+
+    def test_sttn_residual_uses_last_observed_speed(self):
+        sttn = load_graph_model('STTN')
+        adj = np.array([[0, 1], [1, 0]], dtype=np.float32)
+        model = sttn.STTN({'input_window': 12, 'output_window': 1,
+                           'device': torch.device('cpu'), 'embed_dim': 8,
+                           'num_layers': 1, 'num_heads': 2,
+                           'forward_expansion': 2, 'residual_last_speed': True},
+                          {'num_nodes': 2, 'feature_dim': 1,
+                           'output_dim': 1, 'adj_mx': adj})
+        with torch.no_grad():
+            model.conv3.weight.zero_()
+            model.conv3.bias.zero_()
+        x = torch.ones(2, 12, 2, 1)
+        x[:, -1] = 0
+        result = model({'X': x})
+        torch.testing.assert_close(result, torch.ones(2, 1, 2, 1))
+
 
 if __name__ == '__main__':
     unittest.main()

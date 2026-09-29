@@ -138,7 +138,10 @@ class STransformer(nn.Module):
                  forward_expansion=4, dropout_rate=0, device=torch.device('cpu')):
         super().__init__()
         self.device = device
-        self.adj_mx = torch.FloatTensor(adj_mx).to(device)
+        normalized_adj = nn.InstanceNorm2d(1)(
+            torch.as_tensor(adj_mx, dtype=torch.float32, device=device)[None, None]
+        )[0, 0]
+        self.register_buffer('adj_mx', normalized_adj)
         self.D_S = nn.Parameter(torch.FloatTensor(adj_mx).to(device))
         self.embed_linear = nn.Linear(adj_mx.shape[0], embed_dim)
 
@@ -153,7 +156,6 @@ class STransformer(nn.Module):
         )
 
         self.gcn = GCN(embed_dim, embed_dim * 2, embed_dim, dropout_rate, device=device)
-        self.norm_adj = nn.InstanceNorm2d(1)
 
         self.dropout_layer = nn.Dropout(dropout_rate)
         self.fs = nn.Linear(embed_dim, embed_dim)
@@ -165,15 +167,13 @@ class STransformer(nn.Module):
         D_S = D_S.expand(batch_size, input_windows, num_nodes, embed_dim)
         D_S = D_S.permute(0, 2, 1, 3)
 
-        X_G = torch.Tensor(query.shape[0], query.shape[1], 0, query.shape[3]).to(self.device)
-        self.adj_mx = self.adj_mx.unsqueeze(0).unsqueeze(0)
-        self.adj_mx = self.norm_adj(self.adj_mx)
-        self.adj_mx = self.adj_mx.squeeze(0).squeeze(0)
-
-        for t in range(query.shape[2]):
-            o = self.gcn(query[:, :, t, :], self.adj_mx)
-            o = o.unsqueeze(2)
-            X_G = torch.cat((X_G, o), dim=2)
+        # Apply the same fixed graph to every time step in one batched operation.
+        graph_input = query.permute(0, 2, 1, 3).reshape(
+            batch_size * input_windows, num_nodes, embed_dim
+        )
+        X_G = self.gcn(graph_input, self.adj_mx).reshape(
+            batch_size, input_windows, num_nodes, embed_dim
+        ).permute(0, 2, 1, 3)
 
         query = query + D_S
         attention = self.attention(value, key, query)
@@ -302,6 +302,10 @@ class STTN(AbstractTrafficStateModel):
 
         self.input_window = config.get('input_window', 1)
         self.output_window = config.get('output_window', 1)
+        self.residual_last_speed = config.get('residual_last_speed', False)
+        self.residual_scale = config.get('residual_scale', 1.0)
+        if self.residual_scale <= 0:
+            raise ValueError('residual_scale must be positive')
 
         self.conv1 = nn.Conv2d(self.feature_dim, self.embed_dim, 1)
         self.transformer = Transformer(
@@ -314,7 +318,8 @@ class STTN(AbstractTrafficStateModel):
         self.act_layer = nn.ReLU()
 
     def forward(self, batch):
-        inputs = batch['X']
+        history = batch['X']
+        inputs = history
         inputs = inputs.permute(0, 3, 2, 1)
         input_transformer = self.conv1(inputs)
         input_transformer = input_transformer.permute(0, 2, 3, 1)
@@ -326,6 +331,13 @@ class STTN(AbstractTrafficStateModel):
         out = out.permute(0, 3, 2, 1)
         out = self.conv3(out)
         out = out.permute(0, 3, 2, 1)
+        if self.residual_last_speed:
+            observed = history.ne(0)
+            reverse_index = observed.flip(1).int().argmax(dim=1, keepdim=True)
+            index = history.shape[1] - 1 - reverse_index
+            anchor = torch.gather(history, 1, index)
+            anchor = torch.where(observed.any(dim=1, keepdim=True), anchor, 0)
+            out = anchor[:, :, :, :self.output_dim] + self.residual_scale * out
         return out
 
     def calculate_loss(self, batch):

@@ -1,6 +1,6 @@
 # Traffic similarity optimization
 
-This September 2026 portfolio extension reconstructs the station-pair loop used in the author's traffic-analysis notebooks. The inherited LibCity framework and its forecasting models belong to the upstream contributors; their presence does not establish an original model contribution or a completed training experiment.
+This portfolio study reconstructs the station-pair loop used in the author's 2024 internship traffic-analysis notebooks. The inherited LibCity framework and its forecasting models belong to the upstream contributors; their presence does not establish an original model contribution or a completed training experiment.
 
 ## Problem and change
 

@@ -139,7 +139,9 @@ def main():
     parser.add_argument('--train-stride', type=int, default=24)
     parser.add_argument('--eval-stride', type=int, default=12)
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--models', nargs='+', default=['STGCN', 'DCRNN'])
+    parser.add_argument('--models', nargs='+', choices=['STGCN', 'DCRNN', 'STTN'],
+                        default=['STGCN', 'DCRNN'])
+    parser.add_argument('--batch-size', type=int, default=8)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--validation-only', action='store_true',
                       help='Select and save checkpoints without reading the test partition')
@@ -161,7 +163,7 @@ def main():
               'validation': (train_end, validation_end, args.eval_stride),
               'test': (validation_end, n, args.eval_stride)}
     starts = {k: starts_for_split(*v) for k, v in ranges.items()}
-    loaders = {k: DataLoader(Windows(series, s, mean, std), batch_size=8,
+    loaders = {k: DataLoader(Windows(series, s, mean, std), batch_size=args.batch_size,
                              shuffle=(k == 'train'), num_workers=0)
                for k, s in starts.items()}
     # Candidate hyperparameters are declared before looking at the test partition.
@@ -181,6 +183,16 @@ def main():
              'filter_type': 'dual_random_walk', 'use_curriculum_learning': False,
              'learning_rate': .001, 'residual_last_speed': True},
         ],
+        'STTN': [
+            {'embed_dim': 16, 'num_layers': 1, 'num_heads': 2,
+             'forward_expansion': 2, 'dropout_rate': .1, 'learning_rate': .001},
+            {'embed_dim': 16, 'num_layers': 1, 'num_heads': 2,
+             'forward_expansion': 2, 'dropout_rate': .1, 'learning_rate': .001,
+             'residual_last_speed': True},
+            {'embed_dim': 32, 'num_layers': 2, 'num_heads': 4,
+             'forward_expansion': 2, 'dropout_rate': .1, 'learning_rate': .0005,
+             'residual_last_speed': True, 'residual_scale': .5},
+        ],
     }
     args.output_dir.mkdir(parents=True, exist_ok=True)
     report = {'dataset': 'METR-LA', 'source_shape': list(series.shape), 'nodes': int(adj.shape[0]),
@@ -188,7 +200,7 @@ def main():
               'split_boundaries': [train_end, validation_end],
               'window_counts': {k: len(v) for k, v in starts.items()},
               'train_only_mean': mean, 'train_only_std': std, 'seed': args.seed,
-              'epochs': args.epochs, 'models': {}}
+              'epochs': args.epochs, 'batch_size': args.batch_size, 'models': {}}
     report_path = args.output_dir / 'report.json'
     if args.evaluation_only:
         report = json.loads(report_path.read_text())
