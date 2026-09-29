@@ -1,6 +1,6 @@
 # Published repository
 
-Repository: https://github.com/PuweiHe/Bigscity-LibCity-master
+Repository: https://github.com/PuweiHe/casia-traffic-forecasting-ml-dl
 
 Published on September 28, 2026. Public visibility was explicitly authorized by the owner. The repository contains code, model artifacts, aggregate metrics and file hashes. Original Excel recordings and per-window held-out predictions are excluded.
 

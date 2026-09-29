@@ -1,0 +1,396 @@
+{
+  "scope": "Validation-only retrospective architecture ablation; original test was previously inspected",
+  "data_audit": {
+    "files": [
+      {
+        "source": "施工前/data_11/日照南S-N上游.xlsx",
+        "sha256": "b9bd5f3286c5379b999d68b219c30a7b80d78671f80d6116742c84e2a8477f60",
+        "raw_rows": 126,
+        "duplicates_removed": 1,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 5,
+        "start": "2023-11-01 14:39:41.699000",
+        "end": "2023-11-01 14:45:50.124000",
+        "recording": "recording_00",
+        "split": "train",
+        "windows": 1
+      },
+      {
+        "source": "施工前/data_11/日照南S-N上游-2.xlsx",
+        "sha256": "e5d03a40c5687311d8f417fc1d684a23d41870e767176fcd6aa7e8a19cc52072",
+        "raw_rows": 265,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 15,
+        "start": "2023-11-01 14:59:26.468000",
+        "end": "2023-11-01 15:15:11.489000",
+        "recording": "recording_01",
+        "split": "train",
+        "windows": 11
+      },
+      {
+        "source": "施工前/data_11/净距S-N.xlsx",
+        "sha256": "814c8297e7d6321f032c2201c17434ecc5355e5b95bc70cd83e4fd7f43f91336",
+        "raw_rows": 292,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 1,
+        "complete_minutes": 14,
+        "start": "2023-11-01 16:06:06.091000",
+        "end": "2023-11-01 16:21:17.818000",
+        "recording": "recording_02",
+        "split": "train",
+        "windows": 10
+      },
+      {
+        "source": "施工前/data_11/日照S-N下游.xlsx",
+        "sha256": "ac9da423a10b0de22ad53ae51cfff0616c498c16e62fcba73af1e9e5d9acca3b",
+        "raw_rows": 344,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 19,
+        "start": "2023-11-01 16:55:25.549000",
+        "end": "2023-11-01 17:15:41.342000",
+        "recording": "recording_03",
+        "split": "train",
+        "windows": 15
+      },
+      {
+        "source": "施工前/data_11/日照N-S上游.xlsx",
+        "sha256": "752fd396abf3cae70db7dec365e9753499972d85dcf74ea5c62150d8bab7356b",
+        "raw_rows": 316,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 14,
+        "start": "2023-11-02 09:19:47.950000",
+        "end": "2023-11-02 09:34:50.425000",
+        "recording": "recording_04",
+        "split": "train",
+        "windows": 10
+      },
+      {
+        "source": "施工前/data_11/净距N-S.xlsx",
+        "sha256": "2a03d631ab1a74353df9c75874ad7b446b7434b2e8afb3c26cafd05c200e2853",
+        "raw_rows": 307,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 14,
+        "start": "2023-11-02 10:09:05.825000",
+        "end": "2023-11-02 10:24:28.258000",
+        "recording": "recording_05",
+        "split": "train",
+        "windows": 10
+      },
+      {
+        "source": "施工前/data_11/日照南N-S下游.xlsx",
+        "sha256": "e815d33ddf08d4f1c3b1b1864c2d9737f349e45e418c24a73f6d606e555401e4",
+        "raw_rows": 306,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 15,
+        "start": "2023-11-02 10:59:06.268000",
+        "end": "2023-11-02 11:15:20.548000",
+        "recording": "recording_06",
+        "split": "train",
+        "windows": 11
+      },
+      {
+        "source": "5.28施工期/data_5_28/rizhao_N1.xlsx",
+        "sha256": "a79946da0384e9c0f69813e070d6ef813c5ec52e1d81ec0a9b870fa15a0a765e",
+        "raw_rows": 814,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 44,
+        "start": "2024-05-28 10:50:46",
+        "end": "2024-05-28 11:35:20.332000",
+        "recording": "recording_07",
+        "split": "train",
+        "windows": 40
+      },
+      {
+        "source": "5.28施工期/data_5_28/rizhao_rizhaonan_Z1.xlsx",
+        "sha256": "df8535e12c750261fefd58cd06f9b1d3c5ef0e371014ebc026f790782cf631f3",
+        "raw_rows": 439,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 28,
+        "start": "2024-05-28 15:16:07.236000",
+        "end": "2024-05-28 15:45:44.134000",
+        "recording": "recording_08",
+        "split": "train",
+        "windows": 24
+      },
+      {
+        "source": "5.28施工期/data_5_28/rizhao_rizhaonan_Z2.xlsx",
+        "sha256": "299d332d9e35542ecf5211477cea2f9b11e447e52a6c4fffca4eaae7a9371673",
+        "raw_rows": 571,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 31,
+        "start": "2024-05-28 15:48:33.242000",
+        "end": "2024-05-28 16:20:52.947000",
+        "recording": "recording_09",
+        "split": "validation",
+        "windows": 27
+      },
+      {
+        "source": "5.28施工期/data_5_28/rizhaonan_S1.xlsx",
+        "sha256": "f881e076d88bb732315f09003cd5d2d617f87e8a4a5b8e291a33182bd62458bb",
+        "raw_rows": 917,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 59,
+        "start": "2024-05-28 17:16:26.189000",
+        "end": "2024-05-28 18:16:01.204000",
+        "recording": "recording_10",
+        "split": "validation",
+        "windows": 55
+      },
+      {
+        "source": "5.28施工期/data_5_28/fenshui_S1xlsx.xlsx",
+        "sha256": "3d9cd96ba15235e12e6c4a4f28ffe41ac6970b1c45f8a5a6c4b227c79f573017",
+        "raw_rows": 809,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 61,
+        "start": "2024-05-29 09:58:55.246000",
+        "end": "2024-05-29 11:00:17.759000",
+        "recording": "recording_11",
+        "split": "test",
+        "windows": 57
+      },
+      {
+        "source": "5.28施工期/data_5_28/shaopo_N1.xlsx",
+        "sha256": "d3046efa1fa9f13fc3f9702861c5d6a77a5d1ce168e2c2eba540f274f935d95d",
+        "raw_rows": 912,
+        "duplicates_removed": 0,
+        "speed_outliers_excluded": 0,
+        "complete_minutes": 59,
+        "start": "2024-05-29 14:35:48.796000",
+        "end": "2024-05-29 15:35:14.454000",
+        "recording": "recording_12",
+        "split": "test",
+        "windows": 55
+      }
+    ],
+    "features": [
+      "speed",
+      "flow",
+      "speed_std",
+      "high_code_share"
+    ],
+    "window_minutes": 4,
+    "horizon_minutes": 1,
+    "raw_rows": 6418,
+    "split_counts": {
+      "train": 132,
+      "validation": 82,
+      "test": 112
+    }
+  },
+  "candidates": [
+    {
+      "config": {
+        "architecture": "direct",
+        "hidden_size": 8,
+        "residual": true,
+        "anchor": "mean",
+        "residual_scale": 0.1,
+        "loss": "huber",
+        "weight_decay": 0.01
+      },
+      "parameters": 345,
+      "validation_mae_mean": 6.186942259470622,
+      "validation_mae_std": 0.02029550063079164,
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.1749491691589355,
+          "best_epoch": 47,
+          "epochs": 67
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.2103753089904785,
+          "best_epoch": 13,
+          "epochs": 33
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.175502300262451,
+          "best_epoch": 14,
+          "epochs": 34
+        }
+      ]
+    },
+    {
+      "config": {
+        "architecture": "direct",
+        "hidden_size": 8,
+        "residual": true,
+        "anchor": "mean",
+        "residual_scale": 0.25,
+        "loss": "huber",
+        "weight_decay": 0.01
+      },
+      "parameters": 345,
+      "validation_mae_mean": 6.056665579477946,
+      "validation_mae_std": 0.00790022153620867,
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.0568060874938965,
+          "best_epoch": 47,
+          "epochs": 67
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.064494609832764,
+          "best_epoch": 54,
+          "epochs": 74
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.048696041107178,
+          "best_epoch": 63,
+          "epochs": 83
+        }
+      ]
+    },
+    {
+      "config": {
+        "architecture": "direct",
+        "hidden_size": 16,
+        "residual": true,
+        "anchor": "mean",
+        "residual_scale": 0.1,
+        "loss": "huber",
+        "weight_decay": 0.01
+      },
+      "parameters": 1073,
+      "validation_mae_mean": 6.13911501566569,
+      "validation_mae_std": 0.02745410165175281,
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.113124370574951,
+          "best_epoch": 88,
+          "epochs": 108
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.1363911628723145,
+          "best_epoch": 70,
+          "epochs": 90
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.167829513549805,
+          "best_epoch": 43,
+          "epochs": 63
+        }
+      ]
+    },
+    {
+      "config": {
+        "architecture": "direct",
+        "hidden_size": 16,
+        "residual": true,
+        "anchor": "mean",
+        "residual_scale": 0.25,
+        "loss": "huber",
+        "weight_decay": 0.01
+      },
+      "parameters": 1073,
+      "validation_mae_mean": 6.019987106323242,
+      "validation_mae_std": 0.05421398077828992,
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 5.99576473236084,
+          "best_epoch": 55,
+          "epochs": 75
+        },
+        {
+          "seed": 42,
+          "validation_mae": 5.982107162475586,
+          "best_epoch": 70,
+          "epochs": 90
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.082089424133301,
+          "best_epoch": 47,
+          "epochs": 67
+        }
+      ]
+    },
+    {
+      "config": {
+        "architecture": "direct",
+        "hidden_size": 32,
+        "residual": true,
+        "anchor": "mean",
+        "residual_scale": 0.1,
+        "loss": "huber",
+        "weight_decay": 0.01
+      },
+      "parameters": 3681,
+      "validation_mae_mean": 6.139152526855469,
+      "validation_mae_std": 0.02218118684525288,
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.125869274139404,
+          "best_epoch": 27,
+          "epochs": 47
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.126829147338867,
+          "best_epoch": 42,
+          "epochs": 62
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.164759159088135,
+          "best_epoch": 42,
+          "epochs": 62
+        }
+      ]
+    },
+    {
+      "config": {
+        "architecture": "direct",
+        "hidden_size": 32,
+        "residual": true,
+        "anchor": "mean",
+        "residual_scale": 0.25,
+        "loss": "huber",
+        "weight_decay": 0.01
+      },
+      "parameters": 3681,
+      "validation_mae_mean": 6.0229136149088545,
+      "validation_mae_std": 0.02524495547268567,
+      "seeds": [
+        {
+          "seed": 17,
+          "validation_mae": 6.01845121383667,
+          "best_epoch": 26,
+          "epochs": 46
+        },
+        {
+          "seed": 42,
+          "validation_mae": 6.000197410583496,
+          "best_epoch": 38,
+          "epochs": 58
+        },
+        {
+          "seed": 73,
+          "validation_mae": 6.0500922203063965,
+          "best_epoch": 20,
+          "epochs": 40
+        }
+      ]
+    }
+  ]
+}

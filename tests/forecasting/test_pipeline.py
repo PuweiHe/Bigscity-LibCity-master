@@ -78,6 +78,23 @@ class PipelineTests(unittest.TestCase):
         x = torch.randn(5, 4, 4)
         torch.testing.assert_close(model(x), x[:, -1, 0])
 
+    def test_direct_gru_one_step_shape_and_gradient(self):
+        model = ForecastGRU({
+            "architecture": "direct", "hidden_size": 8, "residual": True,
+            "anchor": "mean", "residual_scale": 0.25,
+        })
+        x = torch.randn(5, 4, 4, requires_grad=True)
+        output = model(x)
+        self.assertEqual(output.shape, (5,))
+        self.assertTrue(torch.isfinite(output).all())
+        output.square().mean().backward()
+        self.assertTrue(torch.isfinite(x.grad).all())
+        self.assertTrue(all(p.grad is not None for p in model.parameters()))
+
+    def test_unknown_gru_architecture(self):
+        with self.assertRaises(ValueError):
+            ForecastGRU({"architecture": "missing", "hidden_size": 8})
+
     def test_metrics_units(self):
         result = metrics(np.array([10, 20]), np.array([12, 18]))
         self.assertEqual(result, {"mae": 2.0, "rmse": 2.0})

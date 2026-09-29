@@ -28,6 +28,10 @@ GRU MAE: 6.067 → 5.312 km/h (12.44% lower). Compared with persistence: 26.23% 
 
 Parameter count: 26,369 → 609 (97.69% lower). This is parameter reduction through a separately trained smaller model, not compression of a trained baseline checkpoint. Warm CPU latency is machine-specific and excludes HTTP/network overhead; see the benchmark JSON.
 
+## Later architecture ablation
+
+A direct one-step GRU head replaces the Seq2Seq decoder with a single linear output. This is appropriate for a one-step target and has 1,073 parameters at the validation-selected hidden size of 16. Six configurations were compared with the same split, seeds, training loop and loss. The best direct model scored 6.020 km/h validation MAE versus 6.111 for the compact Seq2Seq model, but 5.558 km/h on the previously reported test sessions versus 5.312. This is exploratory because those test sessions had been opened in the earlier study. The compact Seq2Seq remains the demonstrated checkpoint; no gain from decoder removal is claimed.
+
 ## Serving and security
 
 The service loads a trusted local artifact once per process, uses the saved training normalizer, disables gradients and validates shapes, feature ranges and consecutive minute timestamps. It does not accept model uploads. Joblib artifacts must never come from untrusted users. Default examples bind to localhost. Predictions are estimates, not calibrated confidence intervals; no physical clipping is applied after prediction.

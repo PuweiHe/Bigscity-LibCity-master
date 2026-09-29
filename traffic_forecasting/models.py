@@ -28,21 +28,44 @@ class ForecastGRU(nn.Module):
         self.residual = config.get("residual", False)
         self.scale = config.get("residual_scale", 1.0)
         self.anchor = config.get("anchor", "last")
-        self.model = seq2seq_class()(
-            {
-                "input_window": 4,
-                "output_window": 1,
-                "hidden_size": config["hidden_size"],
-                "rnn_type": "GRU",
-                "decoder_start": config.get("decoder_start", "random"),
-            },
-            {"num_nodes": 1, "feature_dim": 4, "output_dim": 1},
-        )
+        self.architecture = config.get("architecture", "seq2seq")
+        if self.architecture == "direct":
+            self.model = DirectGRU(config["hidden_size"])
+        elif self.architecture == "seq2seq":
+            self.model = seq2seq_class()(
+                {
+                    "input_window": 4,
+                    "output_window": 1,
+                    "hidden_size": config["hidden_size"],
+                    "rnn_type": "GRU",
+                    "decoder_start": config.get("decoder_start", "random"),
+                },
+                {"num_nodes": 1, "feature_dim": 4, "output_dim": 1},
+            )
+        else:
+            raise ValueError(f"Unknown GRU architecture: {self.architecture}")
 
     def forward(self, x):
-        correction = self.model({"X": x.unsqueeze(2)})[:, 0, 0, 0]
+        correction = (
+            self.model(x)
+            if self.architecture == "direct"
+            else self.model({"X": x.unsqueeze(2)})[:, 0, 0, 0]
+        )
         anchor = x[:, :, 0].mean(1) if self.anchor == "mean" else x[:, -1, 0]
         return anchor + self.scale * correction if self.residual else correction
+
+
+class DirectGRU(nn.Module):
+    """A one-step head without the redundant autoregressive decoder."""
+
+    def __init__(self, hidden_size):
+        super().__init__()
+        self.encoder = nn.GRU(input_size=4, hidden_size=hidden_size, batch_first=True)
+        self.head = nn.Linear(hidden_size, 1)
+
+    def forward(self, x):
+        _, hidden = self.encoder(x)
+        return self.head(hidden[-1]).squeeze(-1)
 
 
 def predict_rf(bundle, x):

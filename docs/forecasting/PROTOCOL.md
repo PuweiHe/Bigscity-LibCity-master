@@ -21,3 +21,7 @@ Models are trained once on train only. Validation chooses hyperparameters and ch
 First-round validation MAE: persistence 7.647, four-minute mean 6.196, baseline RF 6.772, baseline GRU 6.259 km/h. Last-observation residual variants did not improve on the best baselines. This suggests that anchoring on one noisy minute is unsuitable here.
 
 A second and final validation search changes the residual anchor to the four-minute mean. RF: min_samples_leaf {3,10}, max_depth {3,6}, residual scale {0.25,0.5}, 200 trees. GRU: hidden units {8,16}, residual scale {0.1,0.25}, weight decay 0.01, Huber loss; all other training rules unchanged. Preserve the original search and select from *all* candidates including the untuned baseline. A failed tuning attempt must not force a worse model. No further selection will occur after test evaluation.
+
+## Retrospective follow-up after the test was opened
+
+The September 2026 direct-GRU ablation is a new, explicitly exploratory study. It compares hidden sizes {8,16,32} and residual scales {0.1,0.25} on the original validation split, selects by three-seed mean validation MAE, then records the result on the previously inspected test sessions once. It must not be characterized as the sealed test protocol above or used to revise the original benchmark claim.

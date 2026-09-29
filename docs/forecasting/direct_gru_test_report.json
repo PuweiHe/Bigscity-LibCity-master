@@ -1,0 +1,71 @@
+{
+  "scope": "Retrospective comparison on previously reported two-session holdout; exploratory",
+  "selection_rule": "Minimum three-seed mean validation MAE among six predefined direct-GRU configurations",
+  "study_sha256": "d618729960ec544c98b641d2667e20217f9915b3b86225556aa8d5cf56f1e6a9",
+  "configuration": {
+    "architecture": "direct",
+    "hidden_size": 16,
+    "residual": true,
+    "anchor": "mean",
+    "residual_scale": 0.25,
+    "loss": "huber",
+    "weight_decay": 0.01
+  },
+  "parameters": 1073,
+  "validation_mae": 6.019987106323242,
+  "test_windows": 112,
+  "test_mae_mean": 5.557855129241943,
+  "test_rmse_mean": 7.241069316864014,
+  "test_mae_seed_std": 0.09492048388496609,
+  "seeds": [
+    {
+      "seed": 17,
+      "validation_mae": 5.99576473236084,
+      "mae": 5.552356243133545,
+      "rmse": 7.234407901763916,
+      "by_recording": {
+        "recording_11": {
+          "mae": 5.310410976409912,
+          "rmse": 7.288907527923584
+        },
+        "recording_12": {
+          "mae": 5.803099632263184,
+          "rmse": 7.177489280700684
+        }
+      }
+    },
+    {
+      "seed": 42,
+      "validation_mae": 5.982107162475586,
+      "mae": 5.465803623199463,
+      "rmse": 7.158878326416016,
+      "by_recording": {
+        "recording_11": {
+          "mae": 5.203704357147217,
+          "rmse": 7.202846527099609
+        },
+        "recording_12": {
+          "mae": 5.737434387207031,
+          "rmse": 7.1130242347717285
+        }
+      }
+    },
+    {
+      "seed": 73,
+      "validation_mae": 6.082089424133301,
+      "mae": 5.655405521392822,
+      "rmse": 7.329921722412109,
+      "by_recording": {
+        "recording_11": {
+          "mae": 5.441464424133301,
+          "rmse": 7.407680988311768
+        },
+        "recording_12": {
+          "mae": 5.877125263214111,
+          "rmse": 7.2484540939331055
+        }
+      }
+    }
+  ],
+  "artifact_sha256": "0f5f99de11085d8338fffe82eb50f58642c3e3072a7897fa30522f69c265f482"
+}

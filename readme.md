@@ -1,4 +1,4 @@
-# Expressway Traffic Forecasting
+# CASIA Traffic Forecasting — Machine Learning & Deep Learning
 
 **Reproduce a baseline, diagnose noisy targets, and ship a smaller forecasting model.**
 
@@ -21,6 +21,8 @@ Chronological recording-level split: **6,418 source vehicle rows → 132 trainin
 
 The tuned GRU uses **609 parameters vs 26,369 (97.69% fewer)**. Its MAE seed standard deviation fell from 0.630 to 0.021 km/h on this benchmark. The simple moving mean is already strong: the GRU improves on it by only **0.97%**. This small retrospective study does not establish deployment impact or statistical superiority on other roads.
 
+**Follow-up architecture ablation (September 2026):** A direct one-step GRU head removed the autoregressive decoder and was tuned over six hidden-size/residual-scale settings, using the same three seeds and validation sessions. Its best validation MAE was **6.020 km/h**, versus **6.111** for the selected compact Seq2Seq GRU, but its retrospective test MAE was **5.558 km/h**, worse than the compact model's **5.312**. The original holdout had already been inspected before this follow-up, so this comparison is exploratory, not a fresh blind test. The direct model is included as a reproducible negative result; it does not replace the served model. [Candidate scores](docs/forecasting/direct_gru_validation.json) · [Retrospective report](docs/forecasting/direct_gru_test_report.json)
+
 [Full test results](docs/forecasting/test_report.json) · [Search history](docs/forecasting/selection.json) · [Protocol](docs/forecasting/PROTOCOL.md) · [Model card](docs/forecasting/MODEL_CARD.md)
 
 ## What changed and why
@@ -29,6 +31,7 @@ The tuned GRU uses **609 parameters vs 26,369 (97.69% fewer)**. Its MAE seed sta
 2. **Reproduced two representative model families.** A scikit-learn Random Forest provides a nonlinear tabular baseline; the inherited LibCity GRU Seq2Seq provides a recurrent baseline under the same input/target protocol.
 3. **Used validation evidence to change the model.** A last-value residual model did not help. The second search learned small corrections around the four-minute mean, controlled tree complexity, reduced GRU hidden size from 64 to 8, and used Huber loss and weight decay. Both search rounds and all seeds are retained.
 4. **Made inference usable.** Removed the future-label requirement in Seq2Seq, added opt-in deterministic initialization, and packaged train-serving-consistent normalization, schema validation, model loading at startup, `/health`, `/predict`, and regression tests.
+5. **Tested a task-specific architecture.** Added a decoder-free direct GRU with shape/gradient regression tests and a write-once validation/evaluation workflow. The simpler architecture won validation but lost on the two later sessions, illustrating why model selection and generalization evidence must be distinguished.
 
 ```mermaid
 flowchart LR
@@ -78,6 +81,13 @@ python -m traffic_forecasting.experiment evaluate --data-root /path/to/山东高
 ```
 
 Tuning saves the selection, source-data digest and checkpoint hashes before evaluation. The standard evaluator refuses to overwrite an existing test report. Fixed seeds aid reproduction; exact floats may vary across platforms and dependency builds. Test scores must not be used for subsequent model selection.
+
+To reproduce the later architecture ablation, use a new output path for each run:
+
+```bash
+python -m traffic_forecasting.direct_study --data-root /path/to/山东高速数据分析-半幅封闭 --output outputs/direct_validation.json
+python -m traffic_forecasting.direct_evaluate --data-root /path/to/山东高速数据分析-半幅封闭 --study outputs/direct_validation.json --artifact outputs/direct_gru.joblib --report outputs/direct_report.json
+```
 
 ## Tests and engineering evidence
 
