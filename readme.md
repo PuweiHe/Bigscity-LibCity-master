@@ -129,3 +129,10 @@ A separate [DTW study](docs/portfolio/README.md) documents a failed approximate-
 - Public METR-LA is a separate dataset from the private 2024 internship recordings. The author identifies the graph-model work as internship-related; the public benchmark uses this documented dataset and protocol.
 - LibCity framework/model code is inherited from its contributors, not claimed as an original framework implementation. See [upstream README](UPSTREAM_README.md), [Apache-2.0 license](LICENSE.txt), and [the focused Seq2Seq patch](docs/portfolio/seq2seq_changes.patch).
 - Added work is concentrated in `traffic_forecasting/`, `traffic_analysis/`, `tests/`, `scripts/` and the documented Seq2Seq changes. No original published LibCity benchmark score is claimed to have been reproduced.
+
+### CUDA validation search (pending measurements)
+
+A separate [staged CUDA search](docs/forecasting/CUDA_SEARCH.md) tunes STGCN first,
+replicates shortlisted configurations across three seeds, and measures matched
+residual/road-graph ablations. It preserves the running CPU/MPS protocols and does
+not score test partitions during search. No new accuracy gain is claimed yet.

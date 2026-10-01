@@ -1,0 +1,20 @@
+{
+  "version": "cuda_search_v1",
+  "datasets": ["METR_LA", "PEMS_BAY"],
+  "search_seed": 20261001,
+  "screen_seed": 17,
+  "seeds": [17, 42, 73],
+  "epochs": 180,
+  "min_epochs": 40,
+  "patience": 25,
+  "threads": 4,
+  "shortlist_per_model": 3,
+  "primary_metric": "equal-weight mean of 12 horizon validation MAEs in mph",
+  "precision": "float32; TF32 and AMP disabled",
+  "search_trials": {"STGCN": 32, "DCRNN": 8, "STTN": 8},
+  "spaces": {
+    "STGCN": {"Ks": [2, 3, 4], "Kt": [2, 3], "width": [8, 16, 32, 64], "dropout": [0.0, 0.1, 0.2, 0.3], "learning_rate": [0.0001, 0.0003, 0.001, 0.003], "weight_decay": [0.0, 0.00001, 0.0001, 0.001], "batch_size": [16, 32, 64]},
+    "DCRNN": {"rnn_units": [32, 64, 128], "num_rnn_layers": [1, 2], "max_diffusion_step": [1, 2, 3], "learning_rate": [0.0003, 0.001, 0.003], "weight_decay": [0.0, 0.0001], "batch_size": [16, 32]},
+    "STTN": {"embed_dim": [32, 64, 96], "num_layers": [2, 3, 4], "num_heads": [2, 4, 8], "forward_expansion": [2, 4], "dropout_rate": [0.0, 0.1, 0.2], "residual_scale": [0.25, 0.5, 1.0], "learning_rate": [0.0001, 0.0003, 0.001], "weight_decay": [0.0, 0.0001], "batch_size": [16, 32]}
+  }
+}
