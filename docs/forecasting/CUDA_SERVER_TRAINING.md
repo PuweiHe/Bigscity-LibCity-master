@@ -40,7 +40,7 @@ From the repository root, run the one-batch check on **training windows only** a
 bash scripts/run_multihorizon_cuda.sh check /srv/traffic-data /srv/traffic-runs/multihorizon_cuda_v1
 ```
 
-Run the study in a persistent terminal session such as `tmux`. The output directory must be dedicated to this CUDA protocol and on a filesystem with reliable POSIX file locking and atomic rename. Keep the exact code, Python/PyTorch environment, protocol, and data files unchanged until all runs finish.
+Run the study in a persistent terminal session such as `tmux` on a dedicated GPU server. On a scheduled HPC cluster, submit the same training command inside an allocated GPU job instead; do not train on a login node. The output directory must be dedicated to this CUDA protocol and on a filesystem with reliable POSIX file locking and atomic rename. Keep the exact code, Python/PyTorch environment, protocol, and data files unchanged until all runs finish.
 
 ```bash
 tmux new -s traffic-cuda
