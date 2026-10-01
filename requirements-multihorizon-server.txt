@@ -1,0 +1,7 @@
+# Install a CUDA-enabled PyTorch build for the server's driver first.
+# Python 3.10 is recommended to match the original graph-model runtime.
+numpy==1.26.4
+scipy==1.12.0
+scikit-learn==1.5.2
+pandas==2.2.0
+h5py==3.14.0
